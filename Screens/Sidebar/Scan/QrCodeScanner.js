@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {encode as base64Encode} from 'base-64';
 
 const QRCodeScannerComp = ({navigation}) => {
   const [currentId, setCurrentId] = useState('');
@@ -58,26 +59,55 @@ const QRCodeScannerComp = ({navigation}) => {
       storeData(uniQueTableData);
     }
   };
-  const handleScan = data => {
-    console.log(data);
+  const handleScan = async data => {
+    const Username = 'SVVG';
+    const Password = 'Pass@123';
+    const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
+    console.log(data.data);
     setCurrentId(data?.data);
     setScannedData([...scannedData, data?.data]);
-
-    Alert.alert('QR Code Scanned', `Fetched Asset Id ${data?.data}`, [
-      {
-        text: 'OK',
-        onPress: () => {
-          setScanning(false);
-          // Set scanning to false once the user dismisses the alert
+    if (data?.data.length > 0) {
+      let result = await fetch(
+        `https://13.235.186.102/SVVG-API/webapi/ScanFileUpload/AllAsset?searchword=${data.data}`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: basicAuth,
+            'Content-Type': 'application/json',
+          },
         },
-      },
-      {
-        text: 'Cancel',
-        onPress: () => {
-          setScanning(false); // Set scanning to false once the user dismisses the alert
-        },
-      },
-    ]);
+      );
+      result = await result.json();
+      if (result?.data.length > 0) {
+        Alert.alert(
+          'QR Code Scanned',
+          `Asset ID: ${result?.data[0]?.id_wh_dyn}\n
+           Asset Name: ${result?.data[0]?.nm_model}\n
+           Allocated to: ${result?.data[0]?.nm_emp}\n
+           AMC/WARRANTY: ${result?.data[0]?.warr_amc}\n
+           Location:     ${result?.data[0]?.nm_loc}\n
+           Department:   ${result?.data[0]?.nnm_dept}\n
+          `,
+          [
+            {
+              text: 'OK',
+              onPress: () => {
+                setScanning(false);
+                // Set scanning to false once the user dismisses the alert
+              },
+            },
+            {
+              text: 'Cancel',
+              onPress: () => {
+                setScanning(false); // Set scanning to false once the user dismisses the alert
+              },
+            },
+          ],
+        );
+      } else {
+        Alert.alert('DATA NOT FOUND');
+      }
+    }
   };
 
   const renderBottomContent = () => {
@@ -120,7 +150,6 @@ const QRCodeScannerComp = ({navigation}) => {
 
   useEffect(() => {
     if (scanning) {
-      console.log('hhyhyy');
       const scanningTimeout = setTimeout(() => {
         setScanning(false);
       }, 1000); // You can adjust the timeout duration (in milliseconds)

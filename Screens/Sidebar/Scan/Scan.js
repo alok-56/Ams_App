@@ -62,7 +62,7 @@ const Scan = ({navigation}) => {
 
     try {
       const response = await fetch(
-        `http://13.235.186.102/SVVG-API/webapi/ScanFileUpload/FloorDropdown?searchword=${encodeURIComponent(
+        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/ScanFileUpload/FloorDropdown?searchword=${encodeURIComponent(
           id,
         )}`,
         {
@@ -95,7 +95,7 @@ const Scan = ({navigation}) => {
 
     try {
       const response = await fetch(
-        `http://13.235.186.102/SVVG-API/webapi/ScanFileUpload/EMPLocation?id_emp_user=${encodeURIComponent(
+        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/ScanFileUpload/EMPLocation?id_emp_user=${encodeURIComponent(
           userId,
         )}`,
         {
@@ -237,7 +237,7 @@ const Scan = ({navigation}) => {
       const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
 
       // Construct the API URL
-      const apiUrl = `http://13.235.186.102/SVVG-API/webapi/ScanFileUpload/UploadScan?id_loc=${location}&id_sloc=${subLocation}&id_flr=${floor}&id_emp_user=${currentUserData?.id_emp_user}&year=${year}&period=${separateYear}`;
+      const apiUrl = `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/ScanFileUpload/UploadScan?id_loc=${location}&id_sloc=${subLocation}&id_flr=${floor}&id_emp_user=${currentUserData?.id_emp_user}&year=${year}&period=${separateYear}`;
 
       const requestBody = {
         data: idBodyData,

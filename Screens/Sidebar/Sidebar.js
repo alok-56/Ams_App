@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, TouchableOpacity, Text, StyleSheet, Image} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -7,8 +7,20 @@ import FIcon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Sidebar = ({isOpen, onClose, route}) => {
+  const [userData, setUserData] = useState('');
   const navigation = useNavigation();
+  const getUserDetails = async () => {
+    const detail = await AsyncStorage.getItem('userAccess');
+    const formatedData = await JSON.parse(detail);
+    console.log(formatedData, 'fornmatedData');
+    if (formatedData) {
+      setUserData(formatedData?.data[0]?.access),
+        filterSibarContents(formatedData?.data[0]?.access);
+    }
+  };
   const [isAssetsClicked, setIsAssetsClicked] = useState(false);
+  const [content, setContent] = useState([]);
+
   const {params: {userId} = {}} = route || {};
   const clearAsyncStorage = async () => {
     try {
@@ -29,6 +41,184 @@ const Sidebar = ({isOpen, onClose, route}) => {
       navigation.navigate(screen);
     }
   };
+  useEffect(() => {
+    (async () => {
+      getUserDetails();
+    })();
+  }, []);
+
+  //   const filterSibarContents = (userDetail) => {
+  // console.log(typeof userDetail,"udddd")
+  //     if (userDetail) {
+
+  //       const modules = userDetail.split(',');
+  //       console.log(modules, "modu")
+
+  //       modules.map(i => {
+  //         if (i === 'addnewitem') {
+  //           setContent([ ...content,{orderBy:0, key: 'dashboard', value: 'Dashboard', route: 'Dashboard' , Icon:'home'},
+  //           {orderBy:1, key: 'addnewitem', value: 'Add New Asset', route: 'AddToStore' , Icon:'menu'},
+  //            {orderBy:3, key: 'addnewitem', value: 'Rejected Assets', route: 'ModifyAsset' , Icon:'change-circle'},
+  //            {orderBy:4, key: 'myAsset', value: 'My Asset', route: 'MyAssets', Icon:'web-asset' },
+  //             {orderBy:11, key: 'logout', value: 'Logout', route: 'logout' , Icon:'logout'},
+  //         ])
+  //     } else if (i === 'additemstore') {
+  //       setContent((prev) => [
+  //         ...prev,
+  //         { orderBy: 2, key: 'additemstore', value: 'Approve New Asset', route: 'ApproveNewAsset', Icon: 'add-card' }
+  //       ]);
+  //     } else if (i ==='scanning' ){
+  //       setContent((prev) => [
+  //         ...prev,
+  //         { orderBy: 5, key: 'scanning', value: 'Scan', route: 'Scan', Icon: 'menu' }
+  //       ]);    }else if (i ==='bulkinstall' ){
+
+  //       setContent([ ...content,{orderBy:6, key: 'assets', value: 'Assets', route: true , Icon:'arrow-drop-down'},
+  //       {orderBy:7, key: 'bulkinstall', value: 'Allocate', route: 'Allocate', Icon:'menu' }])
+  //     }else if (i ==='uninstallasset' ){
+  //       setContent([ ...content,{orderBy:8, key: 'uninstallasset', value: 'De - Allocate', route: 'DAllocate', Icon:'pin' }])
+  //     }else if (i ==='Link_Accessories' ){
+  //       setContent([ ...content,{orderBy:9, key: 'Link_Accessories', value: 'Link Accessories', route: 'Link', Icon:'link' }])
+  //     }else if (i ==='Dlink_Accessories' ){
+  //       setContent([ ...content,{orderBy:10, key: 'Dlink_Accessories', value: 'DLink Accessories', route: 'DLink', Icon:'link-off' }])
+  //     }else{
+
+  //     }
+
+  //   })
+  // }else{
+  //   console.log('super admin')
+  //   setContent([
+
+  //     {orderBy:1, key: 'addnewitem', value: 'Add New Asset', route: 'AddToStore' , Icon:'menu'},
+  //     {orderBy:3, key: 'addnewitem', value: 'Rejected Assets', route: 'ModifyAsset' , Icon:'change-circle'},
+  //     {orderBy:4, key: 'myAsset', value: 'My Asset', route: 'MyAssets' , Icon:'web-asset'},
+  //     {orderBy:2, key: 'additemstore', value: 'Approve New Asset', route: 'ApproveNewAsset' , Icon:'add-card'},
+  //     {orderBy:5, key: 'scanning', value: 'Scan', route: 'Scan' , Icon:'menu' },
+  //     {orderBy:6, key: 'assets', value: 'Assets', route: true , Icon:'arrow-drop-down'},
+  //     {orderBy:7, key: 'bulkinstall', value: 'Allocate', route: 'Allocate' , Icon:'menu'},
+  //     {orderBy:8, key: 'uninstallasset', value: 'De - Allocate', route: 'DAllocate' , Icon:'link'},
+  //     {orderBy:9, key: 'Link_Accessories', value: 'Link Accessories', route: 'Link' , Icon:'link'},
+  //     {orderBy:10, key: 'Dlink_Accessories', value: 'DLink Accessories', route: 'DLink' , Icon:'link-off'},
+  //     {orderBy:11, key: 'logout', value: 'Logout', route: 'logout' , Icon:'logout'},
+  //     {orderBy:0, key: 'dashboard', value: 'Dashboard', route: 'Dashboard', Icon:'home' }
+
+  //   ])
+  // }
+  // }
+
+  const filterSibarContents = userDetail => {
+    const modules = userDetail.split(',');
+    console.log(modules, 'modu');
+    const updatedContent = generateContent(modules);
+    setContent(updatedContent);
+  };
+
+  const generateContent = modules => {
+    const moduleConfig = {
+      addnewitem: [
+       
+        {
+          orderBy: 1,
+          key: 'addnewitem',
+          value: 'Add New Asset',
+          route: 'AddToStore',
+          Icon: 'post-add',
+        },
+        {
+          orderBy: 3,
+          key: 'addnewitem',
+          value: 'Rejected Assets',
+          route: 'ModifyAsset',
+          Icon: 'change-circle',
+        },
+       
+       
+      ],
+      additemstore: [
+        
+        {
+          orderBy: 2,
+          key: 'additemstore',
+          value: 'Approve New Asset',
+          route: 'ApproveNewAsset',
+          Icon: 'playlist-add-check',
+        },
+        
+      ],
+      scanning: [
+        {
+          orderBy: 8,
+          key: 'scanning',
+          value: 'Scan',
+          route: 'Scan',
+          Icon: 'qr-code-scanner',
+        },
+        
+      ],
+      bulkinstall: [
+        {
+          orderBy: 4,
+          key: 'bulkinstall',
+          value: 'Allocate',
+          route: 'Allocate',
+          Icon: 'playlist-add',
+        },
+        
+      ],
+      uninstallasset: [
+        {
+          orderBy: 5,
+          key: 'uninstallasset',
+          value: 'De - Allocate',
+          route: 'DAllocate',
+          Icon: 'playlist-remove',
+        },
+      
+      ],
+      Link_Accessories: [
+        {
+          orderBy: 6,
+          key: 'Link_Accessories',
+          value: 'Link Accessories',
+          route: 'Link',
+          Icon: 'link',
+        },
+        
+      ],
+      Dlink_Accessories: [
+        {
+          orderBy: 7,
+          key: 'Dlink_Accessories',
+          value: 'DLink Accessories',
+          route: 'DLink',
+          Icon: 'link-off',
+        },
+       
+      ],
+    };
+
+    let content = [];
+    console.log(
+      modules.some(module => module.trim() === ''),
+      'sdfadfsdfvsdfv',
+    );
+    if (modules.some(module => module.trim() === '')) {
+      // Display all data if modules is empty
+      Object.values(moduleConfig).forEach(moduleArray => {
+        content = [...content, ...moduleArray];
+      });
+    } else {
+      modules.forEach(module => {
+        if (moduleConfig[module]) {
+          content = [...content, ...moduleConfig[module]];
+        }
+      });
+    }
+
+    return content;
+  };
+
   // const handleOutforDelivery = () => {
   // handleItemClick('OutForDelivery')
   // }
@@ -42,8 +232,12 @@ const Sidebar = ({isOpen, onClose, route}) => {
   return (
     <View
       style={[styles.sidebarContainer, {display: isOpen ? 'flex' : 'none'}]}>
+      {console.log(userData, 'usdddd')}
+
+      {console.log(content, 'contents')}
+    
       <TouchableOpacity
-        onPress={() => handleItemClick('Dashboard')}
+        onPress={()=>handleItemClick('Dashboard')}
         style={[styles.sidebarButton, styles.sidebarButtonLarge]}>
         <Icon
           name="home"
@@ -54,41 +248,7 @@ const Sidebar = ({isOpen, onClose, route}) => {
         <Text style={styles.sidebarItem}>Dashboard</Text>
       </TouchableOpacity>
       <TouchableOpacity
-        onPress={() => handleItemClick('AddToStore')}
-        style={[styles.dropdownButton, styles.dropdownButtonLarge]}>
-        <Icon
-          name="menu"
-          size={30}
-          color="gray"
-          style={{marginHorizontal: '5%'}}
-        />
-        <Text style={styles.dropdownItem}>Add New Asset</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => handleItemClick('ApproveNewAsset')}
-        style={[styles.sidebarButton, styles.sidebarButtonLarge]}>
-        <Icon
-          name="add-card"
-          size={30}
-          color="gray"
-          style={{marginHorizontal: '5%'}}
-        />
-        <Text style={styles.sidebarItem}>Approve New Asset</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => handleItemClick('ModifyAsset')}
-        style={[styles.sidebarButton, styles.sidebarButtonLarge]}>
-        <Icon
-          name="change-circle"
-          size={30}
-          color="gray"
-          style={{marginHorizontal: '5%'}}
-        />
-        <Text style={styles.sidebarItem}>Rejected Assets</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => handleItemClick('MyAssets', {userId})}
+        onPress={()=>handleItemClick('MyAssets')}
         style={[styles.sidebarButton, styles.sidebarButtonLarge]}>
         <Icon
           name="web-asset"
@@ -96,86 +256,35 @@ const Sidebar = ({isOpen, onClose, route}) => {
           color="gray"
           style={{marginHorizontal: '5%'}}
         />
-        <Text style={styles.sidebarItem}>My Asset</Text>
+        <Text style={styles.sidebarItem}>My-Assets</Text>
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => handleItemClick('Scan')}
-        style={[styles.sidebarButton, styles.sidebarButtonLarge]}>
-        <MIcon
-          name="barcode-scan"
-          size={30}
-          color="gray"
-          style={{marginHorizontal: '5%'}}
-        />
-        <Text style={styles.sidebarItem}>Scan</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() => handleItemClick('Assets')}
-        style={[styles.sidebarButton, styles.sidebarButtonLarge]}>
-        <FIcon
-          name="user-circle-o"
-          size={30}
-          color="gray"
-          style={{marginHorizontal: '5%'}}
-        />
-        <Text style={styles.sidebarItem}>Assets</Text>
-        <Icon
-          name={isAssetsClicked ? 'arrow-drop-up' : 'arrow-drop-down'}
-          size={30}
-          color="gray"
-          style={{marginLeft: '50%'}}
-        />
-      </TouchableOpacity>
-      {isAssetsClicked && (
-        <View style={styles.dropdownContainer}>
-          <TouchableOpacity
-            onPress={() => handleItemClick('Allocate')}
-            style={[styles.dropdownButton, styles.dropdownButtonLarge]}>
-            <FIcon
-              name="file-text"
-              size={30}
-              color="gray"
-              style={{marginHorizontal: '10%'}}
-            />
-            <Text style={styles.dropdownItem}>Allocate</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleItemClick('DAllocate')}
-            style={[styles.dropdownButton, styles.dropdownButtonLarge]}>
-            <MIcon
-              name="pin"
-              size={30}
-              color="gray"
-              style={{marginHorizontal: '10%'}}
-            />
-            <Text style={styles.dropdownItem}>De - Allocate</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleItemClick('Link')}
-            style={[styles.dropdownButton, styles.dropdownButtonLarge]}>
-            <Icon
-              name="link"
-              size={30}
-              color="gray"
-              style={{marginHorizontal: '10%'}}
-            />
-            <Text style={styles.dropdownItem}>Link Accessories</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleItemClick('DLink')}
-            style={[styles.dropdownButton, styles.dropdownButtonLarge]}>
-            <Icon
-              name="link-off"
-              size={30}
-              color="gray"
-              style={{marginHorizontal: '10%'}}
-            />
-            <Text style={styles.dropdownItem}>DLink Accessories</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-
-      <TouchableOpacity
+      
+      {content
+        .sort((a, b) => a.orderBy - b.orderBy)
+        .map(item => {
+          let iconComponent;
+          console.log(item.key, 'keyeyeyey');
+          switch (item.key) {
+           
+            default:
+              return (<>
+                <TouchableOpacity
+                  onPress={() => handleItemClick(item.route, {userId})}
+                  style={[styles.sidebarButton, styles.sidebarButtonLarge]}>
+                  <Icon
+                    name={`${item.Icon}`}
+                    size={30}
+                    color="gray"
+                    style={{marginHorizontal: '5%'}}
+                  />
+                  <Text style={styles.sidebarItem}>{item.value}</Text>
+                </TouchableOpacity>
+                </>
+              );
+              break;
+          }
+        })}
+        <TouchableOpacity
         onPress={handleLogout}
         style={[styles.sidebarButton, styles.sidebarButtonLarge]}>
         <Icon

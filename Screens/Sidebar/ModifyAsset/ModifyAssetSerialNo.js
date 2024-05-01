@@ -121,7 +121,7 @@ const UpdateRejectedSerialNo = ({route, navigation}) => {
     try {
       const Idempuser = await getData();
       const apiUrl =
-        'http://13.235.186.102/SVVG-API/webapi/Store_Rejectlist/UpdateAddToStore';
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Rejectlist/UpdateAddToStore';
       const username = 'SVVG';
       const password = 'Pass@123';
       const headers = new Headers();
@@ -297,7 +297,7 @@ const UpdateRejectedSerialNo = ({route, navigation}) => {
     try {
       setFetchSerialNumbers(true);
       const apiUrl =
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Serial_No';
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Serial_No';
       const username = 'SVVG';
       const password = 'Pass@123';
 

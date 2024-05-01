@@ -13,11 +13,7 @@ const DamagedAssets = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [exportIndex, setExportIndex] = useState(0);
   const itemsPerPage = 15;
-  const tableHeadings = [
-    'Asset Id',
-    'Damage Status',
-    'Invoice No',
-  ];
+  const tableHeadings = ['Asset Id', 'Damage Status', 'Invoice No'];
 
   const MyTable = ({data, headings}) => {
     const cellWidths = [150, 140, 80];
@@ -75,7 +71,7 @@ const DamagedAssets = () => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/reportAPI/assetstatusreport?searchword=allDamage',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/reportAPI/assetstatusreport?searchword=allDamage',
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -102,16 +98,16 @@ const DamagedAssets = () => {
       setApiData([]);
     }
   };
-  const mapDamageStatus = (status) => {
+  const mapDamageStatus = status => {
     switch (status) {
       case 'physical_dmg_mjr':
         return 'Physical damage major';
-        case 'physical_dmg_mnr':
-          return 'Physical damage minor';
-          case 'working':
+      case 'physical_dmg_mnr':
+        return 'Physical damage minor';
+      case 'working':
         return 'Working';
       default:
-        return status; // Default to the original status if not matched
+        return status;
     }
   };
 
@@ -187,7 +183,7 @@ const DamagedAssets = () => {
       headings: tableHeadings,
     });
     const pdfFileName = `DamagedAssets-table.pdf(${exportIndex}).pdf`;
-    const downloadsPath =`${RNFS.DownloadDirectoryPath}`;
+    const downloadsPath = `${RNFS.DownloadDirectoryPath}`;
     const pdfFilePath = `${RNFS.DownloadDirectoryPath}/${pdfFileName}`;
     setExportIndex(prevIndex => prevIndex + 1);
     await ensureDirectoryExists(RNFS.DownloadDirectoryPath);
@@ -199,23 +195,20 @@ const DamagedAssets = () => {
 
     try {
       const pdf = await RNHTMLtoPDF.convert(options);
-      console.log('PDF Conversion Result:', pdf);
-
       if (pdf.filePath) {
-        // Move the downloaded PDF file to the correct path
         await RNFS.moveFile(pdf.filePath, pdfFilePath);
         console.log('PDF file moved to:', pdfFilePath);
-        Alert.alert('Successfully exported PDF!', ' File stored in Downloads folder');
+        Alert.alert(
+          'Successfully exported PDF!',
+          ' File stored in Downloads folder',
+        );
       } else {
-        console.error('PDF conversion failed. No file path received.');
         Alert.alert('PDF Export', 'Failed to export PDF!');
       }
     } catch (error) {
-      console.error('Error generating PDF:', error);
       Alert.alert('PDF Export', 'Failed to export PDF!');
     }
   };
-  
 
   const generateExcel = async () => {
     const ws = XLSX.utils.aoa_to_sheet([tableHeadings, ...apiData]);
@@ -229,7 +222,10 @@ const DamagedAssets = () => {
     try {
       await RNFS.writeFile(excelFilePath, excelBuffer, 'base64');
       console.log('Excel file created:', excelFilePath);
-      Alert.alert('Successfully exported Excel!', ' File stored in Downloads folder');
+      Alert.alert(
+        'Successfully exported Excel!',
+        ' File stored in Downloads folder',
+      );
     } catch (error) {
       console.error('Error creating Excel file:', error);
       Alert.alert('Excel Export', 'Failed to export Excel!');
@@ -291,7 +287,7 @@ const DamagedAssets = () => {
             {renderPaginationButtons()}
           </>
         ) : (
-          <Text>Loading data...</Text>
+          <Text style={{color: 'black'}}>Loading data...</Text>
         )}
 
         <View style={styles.exportButtonsContainer}>

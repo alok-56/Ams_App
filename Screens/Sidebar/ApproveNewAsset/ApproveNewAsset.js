@@ -6,10 +6,33 @@ import {ScrollView} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Sidebar from '../Sidebar';
 import {useFocusEffect} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const ApproveNewAsset = ({navigation}) => {
   const [apiData, setApiData] = useState([]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [uDetails, setUDetail] = useState({id: '', type: ''});
+
+  const getData = async () => {
+    try {
+      const Idempuser = await AsyncStorage.getItem('userId');
+      if (Idempuser) {
+        setUDetail({...uDetails, id: JSON.parse(Idempuser)});
+      }
+      const detail = await AsyncStorage.getItem('userAccess');
+
+      const formatedData = await JSON.parse(detail);
+
+      if (formatedData) {
+        setUDetail({...uDetails, type: formatedData?.data[0]?.type_user});
+      }
+    } catch (error) {
+      console.error('Error retrieving data:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -69,8 +92,21 @@ const ApproveNewAsset = ({navigation}) => {
               }}
               widthArr={cellWidths}
             />
-
-            {data &&
+            {data.length <= 0 ? (
+              <Row
+                data={[`No Assets to Approve`]}
+                style={{
+                  height: 35,
+                  justifyContent: 'space-evenly',
+                  color: 'gray',
+                }}
+                textStyle={{
+                  textAlign: 'center',
+                  color: 'gray',
+                }}
+              />
+            ) : (
+              data &&
               data.slice(startIdx, endIdx).map((rowData, rowIndex) => (
                 <>
                   {console.log(rowData[6], rowData[7], '6,7777777777')}
@@ -100,7 +136,8 @@ const ApproveNewAsset = ({navigation}) => {
                     widthArr={[...cellWidths]}
                   />
                 </>
-              ))}
+              ))
+            )}
           </Table>
         </View>
       </ScrollView>
@@ -114,13 +151,20 @@ const ApproveNewAsset = ({navigation}) => {
   );
   const fetchData = async () => {
     try {
+      const detail = await AsyncStorage.getItem('userAccess');
+
+      const Idempuser = await AsyncStorage.getItem('userId');
+      const formatedId = await JSON.parse(Idempuser);
+      const formatedUserType = await JSON.parse(detail);
+
       const Username = 'SVVG';
       const Password = 'Pass@123';
-      const idEmpUser = 1;
-      const userType = 'Super';
+      const idEmpUser = formatedId;
+      const userType = formatedUserType?.data[0]?.type_user;
       const credentials = encode(`${Username}:${Password}`);
+      console.log(idEmpUser, userType, 'jjjjjj');
       const response = await fetch(
-        `http://13.235.186.102/SVVG-API/webapi/Store_Approver/dropdownlist?id_emp_user=${idEmpUser}&userType=${userType}&searchWord`,
+        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Approver/dropdownlist?id_emp_user=${idEmpUser}&userType=${userType}&searchWord`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -144,7 +188,6 @@ const ApproveNewAsset = ({navigation}) => {
         ]);
         setApiData(mappedData);
       } else {
-        console.error('Error fetching data: Data is not an array or is empty');
         setApiData([]);
       }
     } catch (error) {
@@ -259,13 +302,11 @@ const ApproveNewAsset = ({navigation}) => {
   return (
     <ScrollView>
       <View>
-        {apiData && apiData.length > 0 ? (
+        {apiData && (
           <>
             <MyTable data={apiData} headings={tableHeadings} />
             {renderPaginationButtons()}
           </>
-        ) : (
-          <Text>Loading data...</Text>
         )}
       </View>
       {sidebarOpen && (

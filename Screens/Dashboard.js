@@ -7,11 +7,10 @@ import FIcon from 'react-native-vector-icons/FontAwesome6';
 import ReportIcon from 'react-native-vector-icons/Octicons';
 import {encode} from 'base-64';
 
-const Dashboard = ({navigation}) => {
+const Dashboard = ({navigation, config}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [inStoreCount, setInStoreCount] = useState('Loading...');
   const [allocatedAssetCount, setAllocatedAssetCount] = useState('Loading...');
-
 
   useEffect(() => {
     navigation.setOptions({
@@ -66,7 +65,7 @@ const Dashboard = ({navigation}) => {
       const basicAuth = 'Basic ' + encode(`${Username}:${Password}`);
 
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Count_Asset/Instore',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Count_Asset/Instore',
         {
           method: 'GET',
           headers: {
@@ -101,7 +100,7 @@ const Dashboard = ({navigation}) => {
       const basicAuth = 'Basic ' + encode(`${Username}:${Password}`);
 
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Count_Asset/Allocated_Asset',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Count_Asset/Allocated_Asset',
         {
           method: 'GET',
           headers: {
@@ -156,24 +155,6 @@ const Dashboard = ({navigation}) => {
           </Card.Content>
         </Card>
       </TouchableOpacity>
-      {/* <Card style={{...styles.card,backgroundColor:'green'}}>
-        <Card.Content>
-          <Title>
-              <Icon name="design-services" size={24} color="gray" style={styles.ficon} />
-          </Title>
-          <Title>0</Title>
-          <Text>Under Service</Text>
-        </Card.Content>
-      </Card>
-      <Card style={{...styles.card,backgroundColor:'blue'}}>
-        <Card.Content>
-          <Title>
-              <Icon name="work-off" size={24} color="gray" style={styles.ficon} />
-          </Title>
-          <Title>0</Title>
-          <Text>Not Working</Text>
-        </Card.Content>
-      </Card> */}
       <TouchableOpacity style={{width: '100%'}} onPress={handleInstore}>
         <Card style={{...styles.card, backgroundColor: 'purple'}}>
           <Card.Content>
@@ -212,55 +193,6 @@ const Dashboard = ({navigation}) => {
           </Card.Content>
         </Card>
       </TouchableOpacity>
-      {/* <Card style={{...styles.card,backgroundColor:'violet'}}>
-        <Card.Content>
-          <Title>
-              <Icon name="notification-add" size={24} color="gray" style={styles.ficon} />
-          </Title>
-          <Title>0</Title>
-          <Text>Temporary Laptop</Text>
-        </Card.Content>
-      </Card>
-      <Card style={{...styles.card,backgroundColor:'red'}}>
-        <Card.Content>
-          <Title>
-              <Icon name="shopping-bag" size={24} color="gray" style={styles.ficon} />
-          </Title>
-          <Title>0</Title>
-          <Text>Buy Back</Text>
-        </Card.Content>
-      </Card> */}
-
-      {/* <Card style={{...styles.card,backgroundColor:'blue'}}>
-        <Card.Content>
-          <Title>
-          <MIcon name="home-map-marker" size={24} color="gray" style={styles.ficon} />
-          </Title>
-          <Title>1</Title>
-          <Text>Physical Damage (Major)</Text>
-        </Card.Content>
-      </Card>
-      <Card style={{...styles.card,backgroundColor:'purple'}}>
-        <Card.Content>
-          <Title>
-           
-              <FIcon name="car-on" size={24} color="gray" style={styles.ficon} />
-            
-          </Title>
-          <Title>1</Title>
-          <Text>Physical Damage (Minor)</Text>
-        </Card.Content>
-      </Card>
-      <Card style={{...styles.card,backgroundColor:'orange'}}>
-        <Card.Content>
-          <Title>
-              <FIcon name="hashtag" size={24} color="gray" style={styles.ficon} />
-          </Title>
-          <Title>0</Title>
-          <Text>Scraped / Disposed</Text>
-        </Card.Content>
-      </Card> */}
-
       {sidebarOpen && (
         <View style={styles.sidebar}>
           <Sidebar isOpen={sidebarOpen} onClose={handleCloseSidebar} />

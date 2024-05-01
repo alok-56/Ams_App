@@ -10,6 +10,7 @@ import React, {useEffect, useState} from 'react';
 import {ScrollView} from 'react-native-gesture-handler';
 import {encode} from 'base-64';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {BaseUrl} from '../../../../Api/BaseUrl';
 
 const SerialNo = ({route, navigation}) => {
   const [refreshData, setRefreshData] = useState(false);
@@ -69,7 +70,6 @@ const SerialNo = ({route, navigation}) => {
   useEffect(() => {
     const retrieveUploadInv = async () => {
       try {
-        // Retrieve upload_inv from AsyncStorage
         const storedUploadInv = await AsyncStorage.getItem('upload_inv');
         setUploadInv(storedUploadInv);
       } catch (error) {
@@ -84,28 +84,77 @@ const SerialNo = ({route, navigation}) => {
     try {
       const Idempuser = await AsyncStorage.getItem('userId');
       const changeFormat = JSON.parse(Idempuser);
-      console.log(Idempuser, 'IdempUser My assets');
       return changeFormat;
     } catch (error) {
-      console.error('Error retrieving data:', error);
       return null;
     }
   };
   const clearImage = async () => {
     try {
-      // Retrieve upload_inv from AsyncStorage
       await AsyncStorage.removeItem('upload_inv');
       setUploadInv('');
     } catch (error) {
       console.error('Error removing upload_inv from AsyncStorage:', error);
     }
   };
+  // const validSerialNo = async () => {
+  //   try {
+  //     const Idempuser = await getData();
+  //     const apiUrl =
+  //       'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/CheckExitsVal ';
+  //     const username = 'SVVG';
+  //     const password = 'Pass@123';
+  //     const headers = new Headers();
+  //     headers.set(
+  //       'Authorization',
+  //       `Basic ${encode(`${username}:${password}`)}`,
+  //     );
+  //     headers.set('Content-Type', 'application/json');
+
+  //     const requestData = {
+  //       data: [
+  //         {
+  //           SerialVal: serialVal,
+  //           sapno: serialVal,
+  //         },
+  //       ],
+  //     };
+  //     console.log('Request Payload:', JSON.stringify(requestData));
+  //     const response = await fetch(apiUrl, {
+  //       method: 'POST',
+  //       headers: headers,
+  //       body: JSON.stringify(requestData),
+  //     });
+
+  //     const responseText = await response.text();
+  //     console.log('Server Response:', responseText);
+  //     const match = responseText.match(/\(([^)]+)\)/);
+
+  //     if (match && match[1]) {
+  //       const errorText = match[1];
+  //       Alert.alert(
+  //         'Error',
+  //         'Serial Number Already Exist. Please use different One',
+  //       );
+  //       // Use the errorText for validation or other purposes
+  //       return false;
+  //     } else {
+  //       return true;
+  //     }
+  //   } catch (error) {
+  //     console.log(error, 'error response');
+  //   }
+  // };
 
   const handleSaveData = async () => {
     try {
+      // const isDuplicateVal = await validSerialNo();
+      // if (!isDuplicateVal) {
+      //   return;
+      // }
       const Idempuser = await getData();
       const apiUrl =
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/SavingData';
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/SavingData';
       const username = 'SVVG';
       const password = 'Pass@123';
       const headers = new Headers();
@@ -114,17 +163,17 @@ const SerialNo = ({route, navigation}) => {
         `Basic ${encode(`${username}:${password}`)}`,
       );
       headers.set('Content-Type', 'application/json');
-      const isSerialNumbersEmpty = serialNumbers.some(
-        sn => sn.serialNo.trim() === '' || sn.assetRef.trim() === '',
-      );
+      // const isSerialNumbersEmpty = serialNumbers.some(
+      //   sn => sn.serialNo.trim() === '' || sn.assetRef.trim() === '',
+      // );
 
-      if (isSerialNumbersEmpty) {
-        Alert.alert(
-          'Validation Error',
-          'Please fill in all Serial Numbers and Asset Reference Numbers.',
-        );
-        return;
-      }
+      // if (isSerialNumbersEmpty) {
+      //   Alert.alert(
+      //     'Validation Error',
+      //     'Please fill in all Serial Numbers and Asset Reference Numbers.',
+      //   );
+      //   return;
+      // }
 
       const requestData = {
         data: [
@@ -173,21 +222,18 @@ const SerialNo = ({route, navigation}) => {
             no_model: modalName,
             cst_asst: '',
             tt_un_prc: '',
-            invoice_file: uploadInv,
+            invoice_file: uploadInv !== null ? uploadInv : '',
             SerialVal: serialVal,
             sapno: serialVal,
           },
         ],
       };
-      console.log('Request Payload:', JSON.stringify(requestData));
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(requestData),
       });
-
       const responseText = await response.text();
-      console.log('Server Response:', responseText);
       if (responseText) {
         await clearImage();
       }
@@ -217,8 +263,6 @@ const SerialNo = ({route, navigation}) => {
       const responseData = await response.json();
       if (responseData.status === 'Record has been inserted successfully') {
         console.log('Record has been inserted successfully');
-
-        // Reset the state values
         setSerialNumbers(
           Array.from({length: quantity}, (_, index) => ({
             serialNo: '',
@@ -239,8 +283,7 @@ const SerialNo = ({route, navigation}) => {
   const handleDontSerial = async () => {
     try {
       setFetchSerialNumbers(true);
-      const apiUrl =
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Serial_No';
+      const apiUrl = `${BaseUrl}/asset/generateSerialNumbers?quantity=${quantity}`;
       const username = 'SVVG';
       const password = 'Pass@123';
 
@@ -261,32 +304,39 @@ const SerialNo = ({route, navigation}) => {
       }
 
       const responseData = await response.json();
+      console.log(responseData);
 
-      const currentSerialNumber = parseInt(responseData.data[0].slNo);
-      const currentMaxValue = parseInt(responseData.data[0].maxvalue);
+      // const currentSerialNumber = parseInt(responseData.data[0].slNo);
+      // const currentMaxValue = parseInt(responseData.data[0].maxvalue);
 
-      const generatedSerialNumbers = Array.from(
-        {length: quantity},
-        (_, index) => ({
-          serialNo: `NA${currentSerialNumber + index}${
-            currentMaxValue + index
-          }`,
-          assetRef: `NA${currentSerialNumber + index}${
-            currentMaxValue + index
-          }`,
+      // const generatedSerialNumbers = Array.from(
+      //   {length: quantity},
+      //   (_, index) => ({
+      //     serialNo: `NA${responseData + index}${
+      //       currentMaxValue + index
+      //     }`,
+      //     assetRef: `NA${responseData + index}${
+      //       currentMaxValue + index
+      //     }`,
+      //     id: index + 1,
+      //   }),
+      // );
+
+      const newobj = responseData.map((response, index) => {
+        return {
+          value: response,
           id: index + 1,
-        }),
-      );
+        };
+      });
+      setSerialVal(newobj);
 
-      setSerialNumbers(generatedSerialNumbers);
+      // setSerialNumbers(generatedSerialNumbers);
 
-      // Update SerialVal and sapno
-      const serialValStr = generatedSerialNumbers
-        .map(sn => sn.serialNo)
-        .join(',,');
-      const sapnoStr = generatedSerialNumbers.map(sn => sn.assetRef).join(',,');
-      setSerialVal(serialValStr);
-      setSapno(sapnoStr);
+      // // Update SerialVal and sapno
+      const serialValStr = responseData.map(sn => sn).join(',');
+      console.log(serialValStr);
+      // setSerialVal(serialValStr);
+      // setSapno(sapnoStr);
     } catch (error) {
       console.error('Error fetching serial numbers:', error);
     } finally {
@@ -301,15 +351,12 @@ const SerialNo = ({route, navigation}) => {
     }
   }, [fetchSerialNumbers]);
   useEffect(() => {
-    // Check if the refreshData state has changed
     if (refreshData) {
-      // Fetch data again or trigger the necessary update
-      getData(); // Assuming getData is your fetch function
-
-      // Reset the refreshData state to false
+      getData();
       setRefreshData(false);
     }
   }, [refreshData]);
+
   const handleBackPress = () => {
     setRefreshData(true);
     navigation.navigate('AddToStore');
@@ -317,9 +364,14 @@ const SerialNo = ({route, navigation}) => {
 
   const handleSerialNumberChange = (value, index) => {
     if (!/\s/.test(value) || value === '') {
-      const updatedSerialNumbers = [...serialNumbers];
-      updatedSerialNumbers[index].serialNo = value;
-      setSerialNumbers(updatedSerialNumbers);
+      // const updatedSerialNumbers = [...serialNumbers];
+      // updatedSerialNumbers[index].serialNo = value;
+      // console.log(updatedSerialNumbers, 'hello');
+      // const serialValStr = updatedSerialNumbers
+      //   .map(sn => sn.serialNo)
+      //   .join(',,');
+      // setSerialNumbers(updatedSerialNumbers);
+      // setSerialVal(serialValStr);
     }
   };
   const handleInputChange = (value, index, field) => {
@@ -339,15 +391,17 @@ const SerialNo = ({route, navigation}) => {
           </View>
         </TouchableOpacity>
 
-        {serialNumbers.map((serialNumber, index) => (
+        {serialVal.map((serialNumber, index) => (
           <View key={index} style={{flexDirection: 'row'}}>
             <View style={{marginTop: '5%'}}>
               <Text
                 style={styles.headings}>{`Serial No ${serialNumber.id}`}</Text>
               <TextInput
                 style={styles.textinputs}
-                onChangeText={value => handleSerialNumberChange(value, index)}
-                value={serialNumber.serialNo}
+                onChangeText={value =>
+                  handleSerialNumberChange(value, serialNumber.id)
+                }
+                value={serialNumber.value}
                 placeholder={`Enter Serial No ${serialNumber.id}`}
                 placeholderTextColor="gray"
               />
@@ -360,55 +414,15 @@ const SerialNo = ({route, navigation}) => {
               <TextInput
                 style={styles.textinputs}
                 onChangeText={value =>
-                  handleInputChange(value, index, 'assetRef')
+                  handleInputChange(value, serialNumber.id, 'assetRef')
                 }
-                value={serialNumber.assetRef}
+                value={serialNumber.value}
                 placeholder={`Enter Asset REF.NO${serialNumber.id}`}
                 placeholderTextColor="gray"
               />
             </View>
           </View>
         ))}
-        {/* <View >
-      <Text style={{color:'black'}}>Values to be posted:</Text>
-      <Text style={{color:'black'}}>Modal Name: {modalName}</Text>
-      <Text style={{color:'black'}}>ID Model: {selectedModelId}</Text>
-      <Text style={{color:'black'}}>Quantity: {quantity}</Text>
-      <Text style={{color:'black'}}>Unit Price: {unitPrice}</Text>
-      <Text style={{color:'black'}}>Taggable: {taggable}</Text>
-      <Text style={{color:'black'}}>Warranty: {warranty}</Text>
-      <Text style={{color:'black'}}>leaseStatus: {leaseStatus}</Text>
-      <Text style={{color:'black'}}>Start Date: {startDate}</Text>
-      <Text style={{color:'black'}}>end Date: {endDate}</Text>
-      <Text style={{color:'black'}}>Typ of proc: {typeOfProcurement}</Text>
-      <Text style={{color:'black'}}>Locations: {location}</Text>
-      <Text style={{color:'black'}}>department: {department}</Text>
-      <Text style={{color:'black'}}>cost center: {costCenter}</Text>
-      <Text style={{color:'black'}}>itemDescription: {itemDescription}</Text>
-      <Text style={{color:'black'}}>poNumber: {poNumber}</Text>
-      <Text style={{color:'black'}}>poDate: {poDate}</Text>
-      <Text style={{color:'black'}}>invoiceNumber: {invoiceNumber}</Text>
-      <Text style={{color:'black'}}>invoiceDate: {invoiceDate}</Text>
-      <Text style={{color:'black'}}>grnNumber: {grnNumber}</Text>
-      <Text style={{color:'black'}}>grnDate: {grnDate}</Text>
-      <Text style={{color:'black'}}>dcNumber: {dcNumber}</Text>
-      <Text style={{color:'black'}}>dcDate: {dcDate}</Text>
-      <Text style={{color:'black'}}>vendor: {vendor}</Text>
-      <Text style={{color:'black'}}>operatingSystem: {operatingSystem}</Text>
-      <Text style={{color:'black'}}>ram: {ram}</Text>
-      <Text style={{color:'black'}}>diskSpace: {diskSpace}</Text>
-      <Text style={{color:'black'}}>osServiceType: {osServiceType}</Text>
-      <Text style={{color:'black'}}>selectedModelId: {selectedModelId}</Text>
-      <Text style={{color:'black'}}>idAssetdiv: {idAssetdiv}</Text>
-      <Text style={{color:'black'}}>idSAssetdiv: {idSAssetdiv}</Text>
-      <Text style={{color:'black'}}>typAsst: {typAsst}</Text>
-<Text style={{color:'black'}}>modalNm: {serialVal}</Text>
-<Text style={{color:'black'}}>Received upload_inv: {uploadInv}</Text>
-<Text style={{color:'black'}}>locationId: {locationId}</Text>
-    <Text style={{color:'black'}}>subLocationId: {subLocationId}</Text>
-    <Text style={{color:'black'}}>buildingId: {buildingId}</Text>
-    <Text style={{color:'black'}}>Id: {Idempuser}</Text>
-    </View> */}
 
         <View
           style={{

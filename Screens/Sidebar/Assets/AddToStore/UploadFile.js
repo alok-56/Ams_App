@@ -11,6 +11,7 @@ import {encode} from 'base-64';
 import DocumentPicker from 'react-native-document-picker';
 import RNFS from 'react-native-fs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {BaseUrl} from '../../../../Api/BaseUrl';
 
 const UploadFile = ({from}) => {
   const [uploadedDocument, setUploadedDocument] = useState(null);
@@ -21,43 +22,37 @@ const UploadFile = ({from}) => {
       });
 
       const base64Data = await RNFS.readFile(pickedFile.uri, 'base64');
-
-      // Create FormData object
       const formData = new FormData();
-
-      // Append binary file data
       formData.append('file', {
         uri: pickedFile.uri,
         type: pickedFile.type,
         name: pickedFile.name,
       });
 
-      const response = await fetch('http://13.235.186.102/SVVG/Upload_File', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
+      let response = await fetch(
+        `http://13.235.186.102:8090/api/files/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        },
+      );
+      response = await response.json();
+      if (response.message === 'File uploaded successfully.') {
         console.log('Document uploaded successfully');
         Alert.alert('Upload Document', 'Document uploaded successfully');
-
-        // Update the state with the uploaded document information
+        console.log(response);
         setUploadedDocument({
           base64Data,
           fileName: pickedFile.name,
           fileType: pickedFile.type,
         });
 
-        // Log the response
-        const responseBody = await response.text();
-        console.log('Response:', responseBody);
-        const {upload_inv} = JSON.parse(responseBody);
         if (from === 'addToStore') {
-          return await AsyncStorage.setItem('upload_inv', upload_inv);
+          return await AsyncStorage.setItem('upload_inv', response.fileName);
         } else if (from === 'modifStore') {
-          return await AsyncStorage.setItem('modifStore', upload_inv);
+          return await AsyncStorage.setItem('modifStore', response.fileName);
         } else {
-          return await AsyncStorage.setItem('upload_inv', upload_inv);
+          return await AsyncStorage.setItem('upload_inv', response.fileName);
         }
       } else {
         console.error('Failed to upload document. Status:', response.status);

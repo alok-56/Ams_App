@@ -15,6 +15,7 @@ import {Picker} from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {ScrollView} from 'react-native-gesture-handler';
 import {encode as base64Encode} from 'base-64';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Allocate = ({navigation}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,7 +44,7 @@ const Allocate = ({navigation}) => {
 
     try {
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/install/emp_dropdown',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/install/emp_dropdown',
         {
           method: 'GET',
           headers: {
@@ -76,7 +77,7 @@ const Allocate = ({navigation}) => {
 
     try {
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/install/asset_dropdown',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/install/asset_dropdown',
         {
           method: 'GET',
           headers: {
@@ -100,6 +101,7 @@ const Allocate = ({navigation}) => {
     }
   };
   useEffect(() => {
+    getData();
     fetchAssetDropdownData();
     fetchEmployeeDropdownData();
   }, []);
@@ -151,13 +153,25 @@ const Allocate = ({navigation}) => {
   const handleAllocate = () => {
     setShowDropdownAndInput(true);
   };
+  const getData = async () => {
+    try {
+      const Idempuser = await AsyncStorage.getItem('userId');
+      const changeFormat = JSON.parse(Idempuser);
+      console.log(Idempuser, 'IdempUser My assets');
+      return changeFormat;
+    } catch (error) {
+      console.error('Error retrieving data:', error);
+      return null;
+    }
+  };
   const handleAllocateAsset = async () => {
+  console.log(deviceStatus,"defff")
     if (
       selectedAsset.id_wh === '' ||
       assignType === '' ||
       dateTo === '' ||
       textValue === '' ||
-      deviceStatus === ''
+      deviceStatus === '' || deviceStatus === undefined
     ) {
       Alert.alert('Validation Error', 'Please fill in all required fields.', [
         {text: 'OK', onPress: () => console.log('OK Pressed')},
@@ -170,7 +184,7 @@ const Allocate = ({navigation}) => {
       const Username = 'SVVG';
       const Password = 'Pass@123';
       const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
+      const Idempuser = await getData();
       const requestBody = {
         data: [
           {
@@ -179,12 +193,12 @@ const Allocate = ({navigation}) => {
             installRmk: textValue,
             dt_allocate: dateTo,
             device_status: deviceStatus,
+            id_emp_user: Idempuser
           },
         ],
       };
-
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/install/allocate_emp',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/install/allocate_emp',
         {
           method: 'POST',
           headers: {
@@ -207,7 +221,6 @@ const Allocate = ({navigation}) => {
           text: 'OK',
           onPress: () => {
             console.log('OK Pressed');
-            // Handle refresh here (e.g., refetch data or navigate back to the list screen)
             fetchAssetDropdownData();
             fetchEmployeeDropdownData();
           },
@@ -216,7 +229,7 @@ const Allocate = ({navigation}) => {
     } catch (error) {
       console.error('Error allocating asset:', error);
     } finally {
-      setIsLoading(false); // Hide loader
+      setIsLoading(false);
     }
   };
 
@@ -370,6 +383,7 @@ const Allocate = ({navigation}) => {
           </View>
         )}
       </View>
+    {console.log(sidebarOpen,"sideee")}
       {sidebarOpen && (
         <View style={styles.sidebar}>
           <Sidebar isOpen={sidebarOpen} onClose={handleCloseSidebar} />
@@ -418,7 +432,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: '5%',
     paddingTop: '5%',
-    height: '100%',
+    height: 700,
   },
   dropdownContainer: {
     marginVertical: 10,
@@ -457,15 +471,14 @@ const styles = StyleSheet.create({
   sidebar: {
     position: 'absolute',
     top: 0,
-    left: 0,
     bottom: 0,
-    right: 0,
+    left: 0,
     backgroundColor: '#ccc',
     padding: '5%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '80%',
+    width: '80%', 
+    
   },
+
   loader: {
     position: 'absolute',
     top: 0,

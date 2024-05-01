@@ -90,7 +90,7 @@ const Employee = () => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/reportAPI/assetstatusreport?searchword=all',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/reportAPI/assetstatusreport?searchword=all',
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -294,7 +294,7 @@ const Employee = () => {
             {renderPaginationButtons()}
           </>
         ) : (
-          <Text>Loading data...</Text>
+          <Text style={{color:'black'}}>Loading data...</Text>
         )}
 
         <View style={styles.exportButtonsContainer}>

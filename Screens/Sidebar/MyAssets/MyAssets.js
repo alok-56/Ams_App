@@ -78,7 +78,7 @@ const MyAssets = ({navigation, route}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        `http://13.235.186.102/SVVG-API/webapi/myasset?searchword=${Idempuser}`,
+        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/myasset?searchword=${Idempuser}`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -102,7 +102,12 @@ const MyAssets = ({navigation, route}) => {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.content}>
+    {departments.length === 0 ? (
+      <View style={[styles.noDataContainer,styles.dropIt]}>
+        <Text style={styles.noDataText}>No data available</Text>
+      </View>
+    ) : (
+      <View style={[styles.content, styles.dropIt]}>
         {departments &&
           departments.map(department => (
             <Card key={department.id_dept} style={styles.card}>
@@ -131,11 +136,13 @@ const MyAssets = ({navigation, route}) => {
             </Card>
           ))}
       </View>
+    )}
       {sidebarOpen && (
         <View style={styles.sidebar}>
           <Sidebar isOpen={sidebarOpen} onClose={handleCloseSidebar} />
         </View>
       )}
+   
     </ScrollView>
   );
 };
@@ -155,6 +162,10 @@ const styles = StyleSheet.create({
     padding: '5%',
     paddingTop: '10%',
     backgroundColor: 'white',
+   
+  },
+  dropIt:{
+marginBottom:600
   },
   card: {
     marginBottom: '5%',
@@ -204,6 +215,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '80%',
+  },
+  noDataContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop:'5%'
+  },
+  noDataText: {
+    fontSize: 16,
+    color: 'black',
   },
 });
 

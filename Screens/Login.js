@@ -25,12 +25,11 @@ const Login = ({navigation}) => {
   const fetchEmployeeDropdownData = async id => {
     const Username = 'SVVG'; // Replace with your actual username
     const Password = 'Pass@123'; // Replace with your actual password
-
     const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
 
     try {
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/install/emp_dropdown',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/install/emp_dropdown',
         {
           method: 'GET',
           headers: {
@@ -98,7 +97,7 @@ const Login = ({navigation}) => {
         const jsonResponse = JSON.parse(responseMatch[0]);
 
         console.log('Response JSON:', jsonResponse);
-
+        await AsyncStorage.setItem('userAccess', JSON.stringify(jsonResponse));
         if (jsonResponse.data && jsonResponse.data.length > 0) {
           const user = jsonResponse.data[0];
 

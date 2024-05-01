@@ -54,7 +54,7 @@ const ApproveForm = ({route}) => {
       const Password = 'Pass@123';
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        `http://13.235.186.102/SVVG-API/webapi/Store_Approver/SelectedItemDetails?id_inv_m=${id_inv_m}&id_inv=${id_inv}`,
+        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Approver/SelectedItemDetails?id_inv_m=${id_inv_m}&id_inv=${id_inv}`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -149,7 +149,7 @@ const ApproveForm = ({route}) => {
       const Password = 'Pass@123';
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Store_Approver/UpdateStatusApprove',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Approver/UpdateStatusApprove',
         {
           method: 'POST',
           headers: {

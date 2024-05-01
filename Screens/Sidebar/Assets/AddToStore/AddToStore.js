@@ -16,6 +16,7 @@ import {ScrollView} from 'react-native-gesture-handler';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {encode} from 'base-64';
 import UploadFile from './UploadFile';
+import {BaseUrl} from '../../../../Api/BaseUrl';
 
 const AddToStore = ({navigation}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -79,7 +80,6 @@ const AddToStore = ({navigation}) => {
   const [dsAsset, setDsAsset] = useState('');
   const [selectedModel, setSelectedModel] = useState(null);
   const [searchText, setSearchText] = useState('');
-
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -189,12 +189,13 @@ const AddToStore = ({navigation}) => {
         locationId,
         subLocationId,
         buildingId,
+        location,
       });
     }
   };
   const handleWarrantyChange = itemValue => {
     setWarranty(itemValue);
-    setShowDateInputs(itemValue === 'AMC' || itemValue === 'Warranty');
+    setShowDateInputs(itemValue === 'A' || itemValue === 'W');
   };
   const handleStartDateChange = (event, selectedDate) => {
     setShowStartDatepicker(false);
@@ -227,12 +228,12 @@ const AddToStore = ({navigation}) => {
       const formattedStartDate = `${year}-${month}-${day}`;
 
       // Calculate lease end date by setting the year to the current year
-      const endDate = new Date(selectedDate);
-      endDate.setFullYear(new Date().getFullYear() + 1);
+      const endingYear = new Date(selectedDate);
+      endingYear.setFullYear(new Date().getFullYear() + 1);
 
-      const endYear = endDate.getFullYear();
-      const endMonth = `${endDate.getMonth() + 1}`.padStart(2, '0');
-      const endDay = `${endDate.getDate()}`.padStart(2, '0');
+      const endYear = endingYear.getFullYear();
+      const endMonth = `${endingYear.getMonth() + 1}`.padStart(2, '0');
+      const endDay = `${endingYear.getDate()}`.padStart(2, '0');
       const formattedEndDate = `${endYear}-${endMonth}-${endDay}`;
 
       setLeaseStartDate(formattedStartDate);
@@ -245,7 +246,7 @@ const AddToStore = ({navigation}) => {
     if (selectedDate) {
       const year = selectedDate.getFullYear();
       const month = `${selectedDate.getMonth() + 1}`.padStart(2, '0');
-      const day = `${selectedDate.getDate()}`.padStart(2, '0');
+      const day = ` ${selectedDate.getDate()}`.padStart(2, '0');
       const formattedDate = `${year}-${month}-${day}`;
       setEndDate(formattedDate);
     }
@@ -307,7 +308,7 @@ const AddToStore = ({navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Display_department',
+        `${BaseUrl}/master/MasterGetAll?mastername=Dept&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -320,7 +321,7 @@ const AddToStore = ({navigation}) => {
       }
 
       const data = await response.json();
-      setDepartments(data.data);
+      setDepartments(data);
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
@@ -332,7 +333,7 @@ const AddToStore = ({navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/vendor_dropdownlist',
+        `${BaseUrl}/master/MasterGetAll?mastername=Vendor&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -345,7 +346,7 @@ const AddToStore = ({navigation}) => {
       }
 
       const data = await response.json();
-      setVendors(data.data);
+      setVendors(data);
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
@@ -357,7 +358,7 @@ const AddToStore = ({navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Display_CC',
+        `${BaseUrl}/master/MasterGetAll?mastername=CC&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -370,7 +371,7 @@ const AddToStore = ({navigation}) => {
       }
 
       const data = await response.json();
-      setCenters(data.data);
+      setCenters(data);
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
@@ -382,7 +383,7 @@ const AddToStore = ({navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Display_Loc',
+        `${BaseUrl}/master/MasterGetAll?mastername=Location&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -395,27 +396,21 @@ const AddToStore = ({navigation}) => {
       }
 
       const data = await response.json();
-      setLocations(data.data);
+      setLocations(data);
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
   };
   const handleLocationSelection = (itemValue, itemIndex) => {
     setLocation(itemValue);
-    setSelectedLocationId(locations[itemIndex]?.id_flr || '');
-
-    // Find and set details of the selected location
-    const selectedLocationDetails = locations.filter(
-      item => item.id_flr === itemValue,
-    );
-    setSelectedLocationDetails(selectedLocationDetails);
-
-    console.log('Selected Location Details:');
-    console.log('location id:', selectedLocationDetails[0]?.id_loc);
-    console.log('location name:', selectedLocationDetails[0]?.nm_flr);
-    setLocationId(selectedLocationDetails[0]?.id_loc);
-    setSubLocationId(selectedLocationDetails[0]?.id_sloc);
-    setBuildingId(selectedLocationDetails[0]?.id_building);
+    // setSelectedLocationId(locations[itemIndex]?.id_flr || '');
+    // const selectedLocationDetails = locations.filter(
+    //   item => item.id_flr === itemValue,
+    // );
+    // setSelectedLocationDetails(selectedLocationDetails);
+    // setLocationId(selectedLocationDetails[0]?.id_loc);
+    // setSubLocationId(selectedLocationDetails[0]?.id_sloc);
+    // setBuildingId(selectedLocationDetails[0]?.id_building);
   };
   const fetchModels = async () => {
     try {
@@ -424,7 +419,7 @@ const AddToStore = ({navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Display_Model',
+        `${BaseUrl}/master/MasterGetAll?mastername=Material&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -437,7 +432,7 @@ const AddToStore = ({navigation}) => {
       }
 
       const data = await response.json();
-      setModels(data.data);
+      setModels(data);
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
@@ -452,8 +447,7 @@ const AddToStore = ({navigation}) => {
   }, [refreshData]);
 
   const getModalDetails = e => {
-    const selectedModel = models.find(item => item?.nm_model === e);
-
+    const selectedModel = models.find(item => item?.idmodel === e);
     if (selectedModel) {
       const {
         nm_model,
@@ -464,28 +458,20 @@ const AddToStore = ({navigation}) => {
         ds_asst,
       } = selectedModel;
 
-      setModalNm(nm_model);
-      setSelectedModelId(id_model);
+      setModalNm(selectedModel?.nmmodel);
+      setSelectedModelId(selectedModel?.idmodel);
       setIdSAssetdiv(id_s_assetdiv);
       setIdAssetdiv(id_assetdiv);
-      setTypAsst(typ_asst);
+      setTypAsst(selectedModel?.typasst);
       setDsAsset(ds_asst);
-      setItemDescription(ds_asst);
-
-      console.log('Selected Model Details:');
-      console.log('modal name:', nm_model);
-      console.log('model id:', id_model);
-      console.log('idasset:', id_assetdiv);
-      console.log('SAsset', id_s_assetdiv);
-      console.log('type asset:', typ_asst);
-      console.log('item description:', ds_asst);
+      setItemDescription(selectedModel?.itemdesc);
     }
   };
   const handleLeaseStatusChange = itemValue => {
     setLeaseStatus(itemValue);
     setLeaseStartDate('');
     setLeaseEndDate('');
-    setShowLeaseDateInputs(itemValue === 'Under Lease');
+    setShowLeaseDateInputs(itemValue === 'UL');
   };
   const handleQuantityNumber = value => {
     if (/^\d*\.?\d+$/.test(value) || value === '') {
@@ -526,61 +512,44 @@ const AddToStore = ({navigation}) => {
       setOsServiceType(value);
     }
   };
-  
-  const filteredModels = models.filter((model) =>
-    model?.nm_model.toLowerCase().includes(searchText.toLowerCase())
+  const filteredModels = models.filter(model =>
+    model?.nmmodel.toLowerCase().includes(searchText.toLowerCase()),
   );
 
   return (
     <ScrollView>
       <View style={styles.container}>
-        <View style={{backgroundColor: '#052d6e'}}>
-          <Text
+        <View style={{marginTop: '3%'}}>
+          <Text style={styles.headings}>Item/Model Name*</Text>
+          <View
             style={{
-              color: 'white',
-              textAlign: 'center',
-              fontWeight: 'bold',
-              fontSize: 18,
-              padding: 10,
+              borderWidth: 1,
+              width: '95%',
+              justifyContent: 'center',
+              alignSelf: 'center',
+              height: 58,
+              borderRadius: 5,
             }}>
-            Item/Model Details
-          </Text>
-        </View>
-
-        <View style={{ marginTop: '3%' }}>
-        <Text style={styles.headings}>Item/Model Name*</Text>
-        <View style={styles.dropdownContainer}>
-        <TextInput
-            style={styles.textInputStyle}
-            placeholder="Search category"
-            placeholderTextColor={'gray'}
-            value={searchText}
-            onChangeText={(text) => setSearchText(text)}
-          />
-          <ScrollView style={styles.scrollView}>
-          
             <Picker
               selectedValue={modalName}
               onValueChange={(itemValue, itemIndex) => {
-                setSelectedModel(filteredModels[itemIndex]);
-                setModalName(itemValue);
-                getModalDetails(filteredModels[itemIndex]);
+                getModalDetails(itemValue),
+                  setModalName(itemValue),
+                  getModalDetails(itemValue);
               }}
               style={styles.picker}
-            >
-              <Picker.Item label="Select Item/Model" value="" color="gray"/>
-              {filteredModels.map((dept) => (
+              placeholder="Select Asset">
+              <Picker.Item label="Select an option" value="" />
+              {models.map(dept => (
                 <Picker.Item
-                  key={dept.nm_model}
-                  label={dept.nm_model}
-                  value={dept.nm_model}
-                  color="white"
+                  key={dept.idmodel}
+                  label={dept.nmmodel}
+                  value={dept.idmodel}
                 />
               ))}
             </Picker>
-          </ScrollView>
+          </View>
         </View>
-      </View>
         <View style={{marginTop: '3%'}}>
           <Text style={styles.headings}>Quantity*</Text>
           <TextInput
@@ -635,14 +604,14 @@ const AddToStore = ({navigation}) => {
               selectedValue={warranty}
               onValueChange={value => {
                 handleWarrantyChange(value);
-                setShowDateInputs(value === 'AMC' || value === 'Warranty');
+                setShowDateInputs(value === 'A' || value === 'W');
               }}
               style={styles.picker}
               placeholder="Select Asset">
               <Picker.Item label="Select an option" value="" />
-              <Picker.Item label="NO" value="NO" />
-              <Picker.Item label="AMC" value="AMC" />
-              <Picker.Item label="Warranty" value="Warranty" />
+              <Picker.Item label="NO" value="O" />
+              <Picker.Item label="AMC" value="A" />
+              <Picker.Item label="Warranty" value="W" />
             </Picker>
           </View>
         </View>
@@ -650,6 +619,7 @@ const AddToStore = ({navigation}) => {
           <>
             <View style={{marginTop: '3%'}}>
               <Text style={styles.headings}>Start Date*</Text>
+              {console.log(startDate, 'start date amc')}
               <TextInput
                 style={styles.textinputs}
                 placeholder="Start Date"
@@ -701,13 +671,13 @@ const AddToStore = ({navigation}) => {
               selectedValue={leaseStatus}
               onValueChange={value => {
                 handleLeaseStatusChange(value);
-                setShowLeaseDateInputs(value === 'Under Lease');
+                setShowLeaseDateInputs(value === 'UL');
               }}
               style={styles.picker}
               placeholder="Select Asset">
               <Picker.Item label="Select an option" value="" />
-              <Picker.Item label="Not Under Lease" value="Not Under Lease" />
-              <Picker.Item label="Under Lease" value="Under Lease" />
+              <Picker.Item label="Not Under Lease" value="NUL" />
+              <Picker.Item label="Under Lease" value="UL" />
             </Picker>
           </View>
         </View>
@@ -768,9 +738,9 @@ const AddToStore = ({navigation}) => {
               style={styles.picker}
               placeholder="Select Asset">
               <Picker.Item label="Select an option" value="" />
-              <Picker.Item label="Outright Purchase" value="1" />
-              <Picker.Item label="Loan Basis" value="2" />
-              <Picker.Item label="Add-On" value="3" />
+              <Picker.Item label="Outright Purchase" value="OP" />
+              <Picker.Item label="Loan Basis" value="LB" />
+              <Picker.Item label="Add-On" value="FOC" />
             </Picker>
           </View>
         </View>
@@ -792,9 +762,9 @@ const AddToStore = ({navigation}) => {
               <Picker.Item label="Select an option" value="" />
               {locations.map(loc => (
                 <Picker.Item
-                  key={loc.id_flr}
-                  label={loc.nm_flr}
-                  value={loc.id_flr}
+                  key={loc.idloc}
+                  label={loc.nmLoc}
+                  value={loc.idloc}
                 />
               ))}
             </Picker>
@@ -815,16 +785,16 @@ const AddToStore = ({navigation}) => {
               selectedValue={department}
               onValueChange={(itemValue, itemIndex) => {
                 setDepartment(itemValue);
-                setSelectedDepartmentId(departments[itemIndex]?.id_dept || '');
+                setSelectedDepartmentId(departments[itemIndex]?.iddept || '');
               }}
               style={styles.picker}
               placeholder="Select Department">
               <Picker.Item label="Select an option" value="" />
               {departments.map(dept => (
                 <Picker.Item
-                  key={dept.id_dept}
-                  label={dept.nm_dept}
-                  value={dept.id_dept}
+                  key={dept.iddept}
+                  label={dept.nmdept}
+                  value={dept.iddept}
                 />
               ))}
             </Picker>
@@ -849,9 +819,9 @@ const AddToStore = ({navigation}) => {
               <Picker.Item label="Select an option" value="" />
               {centers.map(dept => (
                 <Picker.Item
-                  key={dept.id_cc}
-                  label={dept.nm_cc}
-                  value={dept.id_cc}
+                  key={dept.idcc}
+                  label={dept.nmcc}
+                  value={dept.idcc}
                 />
               ))}
             </Picker>
@@ -940,7 +910,7 @@ const AddToStore = ({navigation}) => {
           />
         </View>
         <View style={{marginTop: '3%'}}>
-          <Text style={styles.headings}>GRN Date</Text>
+          <Text style={styles.headings}>GRN Date*</Text>
           <TextInput
             style={styles.textinputs}
             placeholder="GRN Date"
@@ -966,7 +936,7 @@ const AddToStore = ({navigation}) => {
           />
         </View>
         <View style={{marginTop: '3%'}}>
-          <Text style={styles.headings}>DC Date</Text>
+          <Text style={styles.headings}>DC Date*</Text>
           <TextInput
             style={styles.textinputs}
             placeholder="DC Date"
@@ -1002,9 +972,9 @@ const AddToStore = ({navigation}) => {
               <Picker.Item label="Select an option" value="" />
               {vendors.map(dept => (
                 <Picker.Item
-                  key={dept.id_ven}
-                  label={dept.nm_ven}
-                  value={dept.id_ven}
+                  key={dept.idven}
+                  label={dept.nmven}
+                  value={dept.idven}
                 />
               ))}
             </Picker>
@@ -1142,27 +1112,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontSize: 18,
-  },
-  dropdownContainer: {
-    borderWidth: 1,
-    width: '95%',
-    justifyContent: 'center',
-    alignSelf: 'center',
-    height: 120,
-    borderRadius: 5,
-    overflow: 'hidden',
-    marginTop: 10,
-    color:'black'
-  },
-  textInputStyle: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderColor: 'black',
-    color:'black',
-    
-  },
-  scrollView: {
-    maxHeight: 50,
   },
 });
 export default AddToStore;

@@ -124,7 +124,7 @@ const DLink = ({navigation}) => {
 
     try {
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/De_linkAPI/asset_dropdown?usertype&searchword',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/De_linkAPI/asset_dropdown?usertype&searchword',
         {
           method: 'GET',
           headers: {
@@ -242,7 +242,7 @@ const DLink = ({navigation}) => {
       const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
 
       const apiUrl =
-        'http://13.235.186.102/SVVG-API/webapi/De_linkAPI/SetDlinkStatus';
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/De_linkAPI/SetDlinkStatus';
 
       const requestBody = {
         data: postData.map(asset => ({
@@ -331,7 +331,7 @@ const DLink = ({navigation}) => {
                   </Text>
                   <Text style={styles.cardvalue}>
                     {' '}
-                    {selectedAsset.asset_id}
+                    {selectedAsset.asset_cd}
                   </Text>
                 </View>
                 <View style={styles.labelContainer}>
@@ -352,6 +352,7 @@ const DLink = ({navigation}) => {
                   .filter(item => item.accessory_id.includes(searchText))
                   .map((asset, idx) => (
                     <Card key={idx} style={styles.card}>
+                      {console.log(asset,"Asset")}
                       <Card.Content>
                         <Checkbox
                           status={asset.checked ? 'checked' : 'unchecked'}
@@ -388,14 +389,7 @@ const DLink = ({navigation}) => {
                           </Text>
                           <Text style={styles.value}>{asset.Link_date}</Text>
                         </View>
-                        <View style={styles.labelContainer}>
-                          <Text style={{...styles.label, color: '#ff8a3d'}}>
-                            Acc ID :
-                          </Text>
-                          <Text style={styles.value}>
-                            {asset.accessory_id_wh}
-                          </Text>
-                        </View>
+                       
                         <TextInput
                           style={styles.dateInput}
                           placeholder="Dlink Date"
@@ -440,8 +434,8 @@ const DLink = ({navigation}) => {
             </View>
           </View>
         ) : (
-          <View style={styles.content}>
-            <View style={styles.dropdownContainer}>
+          <View style={styles.dropIt}>
+            <View>
               <View
                 style={{
                   display: 'flex',
@@ -537,7 +531,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: '5%',
     paddingTop: '5%',
-    height: '100%',
+    
+  }, dropIt: {
+    marginBottom: 600,
   },
   dropdownContainer: {
     marginVertical: 10,

@@ -115,7 +115,7 @@ const ModifyAssetForm = ({route, navigation}) => {
         return;
       }
       const response = await fetch(
-        `http://13.235.186.102/SVVG-API/webapi/Store_Approver/SelectedItemDetails?id_inv_m=${id_inv_m}&id_inv=${id_inv}`,
+        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Approver/SelectedItemDetails?id_inv_m=${id_inv_m}&id_inv=${id_inv}`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -415,7 +415,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Display_department',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Display_department',
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -441,7 +441,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/vendor_dropdownlist',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/vendor_dropdownlist',
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -467,7 +467,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Display_CC',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Display_CC',
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -493,7 +493,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Display_Loc',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Display_Loc',
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -537,7 +537,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'http://13.235.186.102/SVVG-API/webapi/Add_To_Store/Display_Model',
+        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Display_Model',
         {
           headers: {
             Authorization: `Basic ${credentials}`,

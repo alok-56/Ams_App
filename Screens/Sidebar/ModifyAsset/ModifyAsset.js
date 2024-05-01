@@ -52,7 +52,7 @@ const ModifyAsset = ({navigation}) => {
 
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={{marginTop: '10%', marginBottom: '10%'}}>
+        <View style={{marginTop: '10%', marginBottom: '50%'}}>
           <Table borderStyle={{borderWidth: 1, borderColor: '#C1C0B9'}}>
             <Row
               data={headings}
@@ -109,7 +109,7 @@ const ModifyAsset = ({navigation}) => {
       const userType = 'Super';
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        `http://13.235.186.102/SVVG-API/webapi/Store_Rejectlist/dropdownlist?id_emp_user=${idEmpUser}&userType=${userType}&searchWord`,
+        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Rejectlist/dropdownlist?id_emp_user=${idEmpUser}&userType=${userType}&searchWord`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
