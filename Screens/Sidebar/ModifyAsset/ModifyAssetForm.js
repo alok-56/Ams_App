@@ -17,6 +17,7 @@ import UploadFile from '../Assets/AddToStore/UploadFile';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Sidebar from '../Sidebar';
 import {useFocusEffect} from '@react-navigation/native';
+import {BaseUrl} from '../../../Api/BaseUrl';
 
 const ModifyAssetForm = ({route, navigation}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -92,109 +93,68 @@ const ModifyAssetForm = ({route, navigation}) => {
 
   useEffect(() => {
     const id_inv_m = route.params?.id_inv_m;
-    const id_inv = route.params?.id_inv;
     setIdInvM(id_inv_m);
-    setIdInv(id_inv);
+    fetchData(id_inv_m);
+  }, [route.params?.id_inv_m]);
 
-    fetchData(id_inv_m, id_inv);
-  }, [route.params?.id_inv_m, route.params?.id_inv]);
-
-  const fetchData = async (id_inv_m, id_inv) => {
+  const fetchData = async id_inv_m => {
     setLoading(true);
+
     try {
       const Username = 'SVVG';
       const Password = 'Pass@123';
       const credentials = encode(`${Username}:${Password}`);
-      console.log(id_inv, 'idinv', id_inv_m, 'idinvm');
-      const getIt = await fetchLocations(); //fetch location async
+      const getIt = await fetchLocations();
       const getModalData = await fetchModels();
       const getDeparmentData = await fetchDepartments();
       const getVendorData = await fetchVendors();
       const getIdcc = await fetchCenters();
-      if (id_inv === undefined && id_inv_m === undefined) {
+      if (id_inv_m === undefined) {
         return;
       }
-      const response = await fetch(
-        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Approver/SelectedItemDetails?id_inv_m=${id_inv_m}&id_inv=${id_inv}`,
-        {
-          headers: {
-            Authorization: `Basic ${credentials}`,
-          },
+      const response = await fetch(`${BaseUrl}/asset/Invoice/${id_inv_m}`, {
+        headers: {
+          Authorization: `Basic ${credentials}`,
         },
-      );
+      });
 
-      const responseData = await response.json();
-      console.log('item data--->', responseData);
-
-      if (Array.isArray(responseData.data) && responseData.data.length > 0) {
-        console.log(getModalData, 'modu');
-        const itemDetails = responseData.data[0];
-        setApiData(itemDetails);
-        // Populate form fields
-        setPoNumber(itemDetails.PONumber);
-        setPoDate(itemDetails.PODate);
-        setInvoiceNumber(itemDetails.InvoiceNO);
-        setInvoiceDate(itemDetails.InvoiceDate);
-        setGrnNumber(itemDetails.GRN);
-        setGrnDate(itemDetails.GRNdate);
-        setDcNumber(itemDetails.DCNum);
-        setDcDate(itemDetails.DCDate);
-        setVendor(itemDetails.Vendor);
-        setModalName(itemDetails.Item);
-        // setCategory(itemDetails.Category);
-        // setSubCategory(itemDetails.SubCategory);
-        // setAssetType(itemDetails.AssetType);
-        setQuantity(itemDetails.Quantity);
-        setUnitPrice(itemDetails.Price);
-        setLocation(itemDetails.Location);
-        setDepartment(itemDetails.Department);
-        setCenter(itemDetails.CostCenter);
-        setDescription(itemDetails.ItemDescription);
-        setRemarks(itemDetails.Remarks || '');
-        setCostCenter(itemDetails.CostCenter);
-        if (getModalData.data) {
-          getModalDetails(itemDetails.Item, getModalData.data);
-        }
-
-        if (getIt.data) {
-          handleLocationSelection(itemDetails.Location, getIt.data);
-        }
-
-        if (getDeparmentData.data) {
-          handleIdDepSet(itemDetails.Department, getDeparmentData.data);
-        }
-        if (getVendorData.data) {
-          handeIdVend(itemDetails.Vendor, getVendorData.data);
-        }
-        if (getIdcc.data) {
-          handleIdCc(itemDetails.CostCenter, getIdcc.data);
-        }
-        // handleLocationSelection(itemDetails.Location, getIt.data);
+      const resData = await response.json();
+      if (resData) {
+        setApiData(resData);
+        setPoNumber(resData?.idinvm?.nopo);
+        setPoDate(resData?.idinvm?.dtpo);
+        setInvoiceNumber(resData?.idinvm?.noinv);
+        setInvoiceDate(resData?.idinvm?.dtinv);
+        setGrnNumber(resData?.idinvm?.nogrn);
+        setGrnDate(resData?.idinvm?.dt_grn);
+        setDcNumber(resData?.idinvm?.nodc);
+        setDcDate(resData?.idinvm?.dtdc);
+        setVendor(resData?.idinvm?.idven?.nmven);
+        setModalName(resData?.idmodel?.idmodel);
+        setTaggable(resData?.tag);
+        setQuantity(resData?.qty);
+        setUnitPrice(resData?.unprc);
+        setLocation(resData?.idinvm?.idflr?.idflr);
+        setDepartment(resData?.idinvm.iddept.iddept);
+        setCostCenter(resData?.idinvm.idcc.idcc);
+        setDescription(resData?.idmodel?.itemdesc);
+        setTypeOfProcurement(resData?.typeproc);
+        setWarranty(resData?.warramc);
+        setLeaseStatus(resData?.stlease);
+        setStartDate(resData?.dtamcstart);
+        setEndDate(resData?.dtamcexp);
+        setLeaseStartDate(resData?.stdlease);
+        setLeaseEndDate(resData?.endtlease);
       } else {
         setApiData([]);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
       setApiData([]);
     } finally {
-      // Hide the activity indicator when fetching data is complete
       setLoading(false);
     }
   };
-  // useEffect(() => {
-  //   navigation.setOptions({
-  //     headerRight: () => (
-  //       <TouchableOpacity
-  //         onPress={handleMenuIconPress}
-  //         style={{position: 'absolute', top: '30%', left: '65%', zIndex: 1}}>
-  //         <Icon name="menu" color="white" size={25} />
-  //       </TouchableOpacity>
-  //     ),
-  //   });
-  // }, [refreshData]);
-  const handleMenuIconPress = () => {
-    setSidebarOpen(prevState => !prevState);
-  };
+
   const handleCloseSidebar = () => {
     setSidebarOpen(false);
   };
@@ -212,16 +172,9 @@ const ModifyAssetForm = ({route, navigation}) => {
       ),
     });
   });
-  // useEffect(() => {
-  //   if (refreshData) {
-  //     setModalName('');
-  //     setQuantity('');
-  //     setRefreshData(false);
-  //   }
-  // }, [refreshData]);
+
   const handleValidation = () => {
     const emptyFields = [];
-
     if (!modalName) emptyFields.push('Modal Name');
     if (!quantity) emptyFields.push('Quantity');
     if (!unitPrice) emptyFields.push('UnitPrice');
@@ -312,7 +265,6 @@ const ModifyAssetForm = ({route, navigation}) => {
       const day = `${selectedDate.getDate()}`.padStart(2, '0');
       const formattedDate = `${year}-${month}-${day}`;
 
-      // Calculate end date by adding one year to the selected start date
       const endDate = new Date(selectedDate);
       endDate.setFullYear(year + 1);
 
@@ -415,7 +367,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Display_department',
+        `${BaseUrl}/master/MasterGetAll?mastername=Dept&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -428,7 +380,7 @@ const ModifyAssetForm = ({route, navigation}) => {
       }
 
       const data = await response.json();
-      setDepartments(data.data);
+      setDepartments(data);
       return data;
     } catch (error) {
       console.error('Error fetching departments:', error);
@@ -441,7 +393,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/vendor_dropdownlist',
+        `${BaseUrl}/master/MasterGetAll?mastername=Vendor&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -454,7 +406,7 @@ const ModifyAssetForm = ({route, navigation}) => {
       }
 
       const data = await response.json();
-      setVendors(data.data);
+      setVendors(data);
       return data;
     } catch (error) {
       console.error('Error fetching departments:', error);
@@ -467,7 +419,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Display_CC',
+        `${BaseUrl}/master/MasterGetAll?mastername=CC&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -480,7 +432,7 @@ const ModifyAssetForm = ({route, navigation}) => {
       }
 
       const data = await response.json();
-      setCenters(data.data);
+      setCenters(data);
       return data;
     } catch (error) {
       console.error('Error fetching departments:', error);
@@ -493,7 +445,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Display_Loc',
+        `${BaseUrl}/master/MasterGetAll?mastername=Floor&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -506,26 +458,23 @@ const ModifyAssetForm = ({route, navigation}) => {
       }
 
       const data = await response.json();
-      setLocations(data.data);
+      setLocations(data);
       return data;
     } catch (error) {
       console.error('Error fetching departments:', error);
     }
   };
   const handleLocationSelection = (itemValue, itemIndex) => {
-    // Find and set details of the selected location
     var selectedLocationDetails = [];
     if (itemIndex !== undefined) {
       selectedLocationDetails = itemIndex.filter(
-        item => item.nm_flr.split(',')[0] === itemValue,
+        item => item.nmflr === itemValue,
       );
     }
 
     setSelectedLocationId(selectedLocationDetails[0]?.id_flr || '');
     setSelectedLocationDetails(selectedLocationDetails);
 
-    console.log('location id:', selectedLocationDetails[0]?.id_loc);
-    console.log('location name:', selectedLocationDetails[0]?.nm_flr);
     setLocationId(selectedLocationDetails[0]?.id_loc);
     setSubLocationId(selectedLocationDetails[0]?.id_sloc);
     setBuildingId(selectedLocationDetails[0]?.id_building);
@@ -537,7 +486,7 @@ const ModifyAssetForm = ({route, navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Add_To_Store/Display_Model',
+        `${BaseUrl}/master/MasterGetAll?mastername=Material&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -550,8 +499,8 @@ const ModifyAssetForm = ({route, navigation}) => {
       }
 
       const data = await response.json();
-      const formatedData = data && data.data.filter(i => i?.nm_model !== '');
-      console.log(formatedData, 'fdfgttd');
+      const formatedData = data && data.filter(i => i?.nm_model !== '');
+
       setModels(formatedData);
       return data;
     } catch (error) {
@@ -567,7 +516,6 @@ const ModifyAssetForm = ({route, navigation}) => {
   }, []);
 
   const getModalDetails = (e, dataIndex) => {
-    console.log('heloooo');
     const selectedModel = dataIndex.find(item => item?.nm_model === e);
 
     if (selectedModel) {
@@ -579,7 +527,6 @@ const ModifyAssetForm = ({route, navigation}) => {
         typ_asst,
         ds_asst,
       } = selectedModel;
-      console.log(selectedModel, 'smmmmmmm');
 
       setModalNm(nm_model);
       setSelectedModelId(id_model);
@@ -588,14 +535,6 @@ const ModifyAssetForm = ({route, navigation}) => {
       setTypAsst(typ_asst);
       setDsAsset(ds_asst);
       setItemDescription(ds_asst);
-
-      console.log('Selected Model Details:');
-      console.log('modal name:', nm_model);
-      console.log('model id:', id_model);
-      console.log('idasset:', id_assetdiv);
-      console.log('SAsset', id_s_assetdiv);
-      console.log('type asset:', typ_asst);
-      console.log('item description:', ds_asst);
       if (typ_asst === 'NON-IT' || typ_asst === 'SOFTWARE') {
         setShowConfig(false);
       } else {
@@ -650,32 +589,26 @@ const ModifyAssetForm = ({route, navigation}) => {
   };
 
   const handleIdDepSet = (itemValue, dataIndex) => {
-    console.log(dataIndex, 'diiaiiaia');
     const filteredDep =
-      dataIndex && dataIndex.filter(i => i?.nm_dept === itemValue);
-    console.log(filteredDep, 'dep Id');
-    setIdDept(filteredDep[0]?.id_dept);
+      dataIndex && dataIndex.filter(i => i?.nmdept === itemValue);
+
+    setIdDept(filteredDep[0]?.iddept);
   };
   const handeIdVend = (itemValue, dataIndex) => {
-    console.log(dataIndex, 'viaiiaia');
-
     const filteredDep =
       dataIndex && dataIndex.filter(i => i?.nm_ven === itemValue);
-    console.log(filteredDep, 'venId');
+
     setIdvendor(filteredDep[0]?.id_ven);
   };
   const handleIdCc = (itemValue, dataIndex) => {
-    console.log(dataIndex, 'icccc');
-
     const filteredDep =
       dataIndex && dataIndex.filter(i => i?.nm_cc === itemValue);
-    console.log(filteredDep, 'iccc');
+
     setIdCostCenter(filteredDep[0]?.id_cc);
   };
 
   return (
     <ScrollView>
-      {console.log(showConfig, 'moduf')}
       <View style={{flex: 1}}>
         {loading && (
           <View
@@ -688,7 +621,7 @@ const ModifyAssetForm = ({route, navigation}) => {
             <ActivityIndicator size="large" color="#0000ff" />
           </View>
         )}
-        {console.log(idDept, idVendor, 'oooooooo')}
+
         {!loading && (
           <View style={styles.container}>
             <View style={{backgroundColor: '#052d6e'}}>
@@ -723,13 +656,14 @@ const ModifyAssetForm = ({route, navigation}) => {
                   style={styles.picker}
                   placeholder="Select Asset">
                   <Picker.Item label="Select an option" value="" />
-                  {models.map(dept => (
-                    <Picker.Item
-                      key={dept.nm_model}
-                      label={dept.nm_model}
-                      value={dept.nm_model}
-                    />
-                  ))}
+                  {models &&
+                    models.map(dept => (
+                      <Picker.Item
+                        key={dept.nmmodel}
+                        label={dept.nmmodel}
+                        value={dept.idmodel}
+                      />
+                    ))}
                 </Picker>
               </View>
             </View>
@@ -738,7 +672,7 @@ const ModifyAssetForm = ({route, navigation}) => {
               <TextInput
                 style={styles.textinputs}
                 onChangeText={handleQuantityNumber}
-                value={quantity}
+                value={quantity.toString()}
                 keyboardType="numeric"
               />
             </View>
@@ -747,7 +681,7 @@ const ModifyAssetForm = ({route, navigation}) => {
               <TextInput
                 style={styles.textinputs}
                 onChangeText={handleUnitPriceNumber}
-                value={unitPrice}
+                value={unitPrice.toString()}
                 keyboardType="numeric"
               />
             </View>
@@ -944,12 +878,13 @@ const ModifyAssetForm = ({route, navigation}) => {
                     handleLocationSelection(e, locations), setLocation(e)
                   )}
                   style={styles.picker}>
+                  <Picker.Item label="Select an option" value="" />
                   {locations &&
                     locations.map(dept => (
                       <Picker.Item
-                        key={dept.id_loc}
-                        label={dept.nm_flr}
-                        value={dept.nm_flr.split(',')[0]}
+                        key={dept.idloc}
+                        label={dept.nmflr}
+                        value={dept.idflr}
                       />
                     ))}
                 </Picker>
@@ -975,13 +910,14 @@ const ModifyAssetForm = ({route, navigation}) => {
                   style={styles.picker}
                   placeholder="Select Department">
                   <Picker.Item label="Select an option" value="" />
-                  {departments.map(dept => (
-                    <Picker.Item
-                      key={dept.id_dept}
-                      label={dept.nm_dept}
-                      value={dept.nm_dept}
-                    />
-                  ))}
+                  {departments &&
+                    departments.map(dept => (
+                      <Picker.Item
+                        key={dept.iddept}
+                        label={dept.nmdept}
+                        value={dept.iddept}
+                      />
+                    ))}
                 </Picker>
               </View>
             </View>
@@ -996,23 +932,21 @@ const ModifyAssetForm = ({route, navigation}) => {
                   height: 58,
                   borderRadius: 5,
                 }}>
-                {console.log(costCenter, 'cffffccfc')}
-
-                {console.log(centers, 'llllll')}
                 <Picker
                   selectedValue={costCenter}
                   onValueChange={itemValue => (
                     handleIdCc(itemValue, centers), setCostCenter(itemValue)
                   )}
                   style={styles.picker}>
-                  {/* <Picker.Item label="Select an option" value="" style={{ color: 'gray' }} /> */}
-                  {centers.map(dept => (
-                    <Picker.Item
-                      key={dept.id_cc}
-                      label={dept.nm_cc}
-                      value={dept.nm_cc}
-                    />
-                  ))}
+                  <Picker.Item label="Select an option" value="" />
+                  {centers &&
+                    centers.map(dept => (
+                      <Picker.Item
+                        key={dept.idcc}
+                        label={dept.nmcc}
+                        value={dept.idcc}
+                      />
+                    ))}
                 </Picker>
               </View>
             </View>

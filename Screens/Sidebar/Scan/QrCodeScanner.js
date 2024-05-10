@@ -10,6 +10,7 @@ import {
 import QRCodeScanner from 'react-native-qrcode-scanner';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {encode as base64Encode} from 'base-64';
+import {BaseUrl} from '../../../Api/BaseUrl';
 
 const QRCodeScannerComp = ({navigation}) => {
   const [currentId, setCurrentId] = useState('');
@@ -19,30 +20,13 @@ const QRCodeScannerComp = ({navigation}) => {
 
   const storeData = async newData => {
     try {
-      console.log('cslling mee');
-      // Fetch the previous data from AsyncStorage
       const previousDataString = await AsyncStorage.getItem('AssestData');
       let previousData = previousDataString
         ? JSON.parse(previousDataString)
         : [];
-
-      // Append the new data to the previous data
       previousData = [...previousData, ...newData];
-
-      // Convert the combined array to a JSON string
       const updatedDataString = JSON.stringify(previousData);
-
-      // Save the updated data back to AsyncStorage
       await AsyncStorage.setItem('AssestData', updatedDataString);
-      // Alert.alert('QR Code Added Successfully', [
-      //   {
-      //     text: 'OK',
-      //     onPress: () => {
-      //       setScanning(true); // Set scanning to false once the user dismisses the alert
-      //     },
-      //   },
-      // ]);
-      console.log('Data stored successfully!');
     } catch (error) {
       console.error('Error storing data:', error);
     }
@@ -60,33 +44,27 @@ const QRCodeScannerComp = ({navigation}) => {
     }
   };
   const handleScan = async data => {
-    const Username = 'SVVG';
-    const Password = 'Pass@123';
-    const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-    console.log(data.data);
     setCurrentId(data?.data);
     setScannedData([...scannedData, data?.data]);
     if (data?.data.length > 0) {
-      let result = await fetch(
-        `https://13.235.186.102/SVVG-API/webapi/ScanFileUpload/AllAsset?searchword=${data.data}`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: basicAuth,
-            'Content-Type': 'application/json',
-          },
+      let result = await fetch(`${BaseUrl}/asset/allassets`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
       result = await result.json();
-      if (result?.data.length > 0) {
+      console.log(result, 'aj');
+      let updateData = result.find(item => item.idwhdyn === data?.data);
+      console.log(updateData);
+      if (result?.length > 0) {
         Alert.alert(
           'QR Code Scanned',
-          `Asset ID: ${result?.data[0]?.id_wh_dyn}\n
-           Asset Name: ${result?.data[0]?.nm_model}\n
-           Allocated to: ${result?.data[0]?.nm_emp}\n
-           AMC/WARRANTY: ${result?.data[0]?.warr_amc}\n
-           Location:     ${result?.data[0]?.nm_loc}\n
-           Department:   ${result?.data[0]?.nnm_dept}\n
+          `Asset ID: ${updateData?.idwhdyn}\n
+           Asset Name: ${updateData?.idinv?.idmodel?.nmmodel}\n
+           AMC/WARRANTY: ${updateData?.idinv?.warramc}\n
+           Location:     ${updateData?.idinv?.idinvm?.idflr?.idbuilding?.idloc?.nmLoc}\n
+           Department:   ${updateData?.idinv?.idinvm?.iddept?.nmdept}\n
           `,
           [
             {

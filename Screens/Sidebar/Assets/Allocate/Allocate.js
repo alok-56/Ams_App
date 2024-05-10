@@ -16,6 +16,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import {ScrollView} from 'react-native-gesture-handler';
 import {encode as base64Encode} from 'base-64';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {BaseUrl} from '../../../../Api/BaseUrl';
 
 const Allocate = ({navigation}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -37,14 +38,12 @@ const Allocate = ({navigation}) => {
     device_status: '',
   });
   const fetchEmployeeDropdownData = async () => {
-    const Username = 'SVVG'; // Replace with your actual username
-    const Password = 'Pass@123'; // Replace with your actual password
-
+    const Username = 'SVVG';
+    const Password = 'Pass@123';
     const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
     try {
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/install/emp_dropdown',
+        `${BaseUrl}/master/MasterGetAll?mastername=Employee&requireString=s`,
         {
           method: 'GET',
           headers: {
@@ -60,8 +59,8 @@ const Allocate = ({navigation}) => {
 
       const data = await response.json();
 
-      if (data && Array.isArray(data.data)) {
-        setEmployeeDropdownData(data.data);
+      if (data && Array.isArray(data)) {
+        setEmployeeDropdownData(data);
       }
     } catch (error) {
       console.error('Error fetching employee dropdown data:', error);
@@ -76,16 +75,13 @@ const Allocate = ({navigation}) => {
     const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
 
     try {
-      const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/install/asset_dropdown',
-        {
-          method: 'GET',
-          headers: {
-            Authorization: basicAuth,
-            'Content-Type': 'application/json',
-          },
+      const response = await fetch(`${BaseUrl}/asset/allassets`, {
+        method: 'GET',
+        headers: {
+          Authorization: basicAuth,
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -93,8 +89,9 @@ const Allocate = ({navigation}) => {
 
       const data = await response.json();
 
-      if (data && Array.isArray(data.data)) {
-        setAssetDropdownData(data.data);
+      if (data && Array.isArray(data)) {
+        let newdata = data.filter(item => item.devicestatus === 'instore');
+        setAssetDropdownData(newdata);
       }
     } catch (error) {
       console.error('Error fetching asset dropdown data:', error);
@@ -165,13 +162,13 @@ const Allocate = ({navigation}) => {
     }
   };
   const handleAllocateAsset = async () => {
-  console.log(deviceStatus,"defff")
     if (
       selectedAsset.id_wh === '' ||
       assignType === '' ||
       dateTo === '' ||
       textValue === '' ||
-      deviceStatus === '' || deviceStatus === undefined
+      deviceStatus === '' ||
+      deviceStatus === undefined
     ) {
       Alert.alert('Validation Error', 'Please fill in all required fields.', [
         {text: 'OK', onPress: () => console.log('OK Pressed')},
@@ -179,35 +176,29 @@ const Allocate = ({navigation}) => {
       return;
     }
     try {
-      setIsLoading(true); // Show loader
-
+      setIsLoading(true);
       const Username = 'SVVG';
       const Password = 'Pass@123';
       const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
       const Idempuser = await getData();
-      const requestBody = {
-        data: [
-          {
-            InstallAssetID: selectedAsset.id_wh,
-            to_assign: assignType,
-            installRmk: textValue,
-            dt_allocate: dateTo,
-            device_status: deviceStatus,
-            id_emp_user: Idempuser
-          },
-        ],
-      };
-      const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/install/allocate_emp',
-        {
-          method: 'POST',
-          headers: {
-            Authorization: basicAuth,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
+
+      const response = await fetch(`${BaseUrl}/asset/allocate/{id}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: basicAuth,
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify([
+          {
+            idwhList: selectedAsset.id_wh,
+            loginId: 1,
+            asstStatus: deviceStatus,
+            idemp: Number(assignType),
+            allocationdate: dateTo,
+            rmkasst: textValue,
+          },
+        ]),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
@@ -215,14 +206,16 @@ const Allocate = ({navigation}) => {
         setShowDropdownAndInput(false);
       }
       const responseText = await response.text();
-      console.log('POST Response:', responseText);
       Alert.alert('Response', responseText, [
         {
           text: 'OK',
           onPress: () => {
-            console.log('OK Pressed');
             fetchAssetDropdownData();
             fetchEmployeeDropdownData();
+            setDeviceStatus('');
+            setTextValue('');
+            setToDate('');
+            setAssignType('');
           },
         },
       ]);
@@ -243,14 +236,15 @@ const Allocate = ({navigation}) => {
 
   const handleAssetChange = itemValue => {
     const selectedAssetData = assetDropdownData.find(
-      asset => asset.id_wh_dyn === itemValue,
+      asset => asset.idwhdyn === itemValue,
     );
+
     setSelectedAsset({
-      id_wh_dyn: selectedAssetData?.id_wh_dyn || '',
-      nm_prod: selectedAssetData?.nm_prod || '',
-      serial_no: selectedAssetData?.serial_no || '',
-      id_wh: selectedAssetData?.id_wh || '',
-      device_status: selectedAssetData?.device_status || '',
+      id_wh_dyn: selectedAssetData?.idwhdyn || '',
+      nm_prod: selectedAssetData?.idinv?.idmodel?.nmmodel || '',
+      serial_no: selectedAssetData?.serialno || '',
+      id_wh: selectedAssetData?.idwh || '',
+      device_status: selectedAssetData?.devicestatus || '',
     });
     setLoginType(itemValue);
   };
@@ -279,10 +273,6 @@ const Allocate = ({navigation}) => {
                   <Text style={styles.label}>Serial No</Text>
                   <Text style={styles.value}>{selectedAsset.serial_no}</Text>
                 </View>
-                {/* <View style={styles.labelValueContainer}>
-                  <Text style={styles.label}>Install</Text>
-                  <Text style={styles.value}>{selectedAsset.id_wh}</Text>
-                </View> */}
               </Card.Content>
             </Card>
             <View
@@ -304,9 +294,9 @@ const Allocate = ({navigation}) => {
               onValueChange={handleEmployeeChange}>
               {employeeDropdownData.map(item => (
                 <Picker.Item
-                  key={item.id_emp_user}
-                  label={item.nm_emp}
-                  value={item.id_emp_user}
+                  key={item.idempuser}
+                  label={item.nmemp}
+                  value={item.idempuser}
                 />
               ))}
             </Picker>
@@ -367,11 +357,12 @@ const Allocate = ({navigation}) => {
               style={styles.picker}
               placeholder="Select Asset"
               onValueChange={handleAssetChange}>
+              <Picker.Item key="" label="Select Asset" value="" />
               {assetDropdownData.map(item => (
                 <Picker.Item
-                  key={item.id_wh_dyn}
-                  label={item.id_wh_dyn}
-                  value={item.id_wh_dyn}
+                  key={item.idwhdyn}
+                  label={item.idwhdyn}
+                  value={item.idwhdyn}
                 />
               ))}
             </Picker>
@@ -383,7 +374,7 @@ const Allocate = ({navigation}) => {
           </View>
         )}
       </View>
-    {console.log(sidebarOpen,"sideee")}
+      {console.log(sidebarOpen, 'sideee')}
       {sidebarOpen && (
         <View style={styles.sidebar}>
           <Sidebar isOpen={sidebarOpen} onClose={handleCloseSidebar} />
@@ -475,8 +466,7 @@ const styles = StyleSheet.create({
     left: 0,
     backgroundColor: '#ccc',
     padding: '5%',
-    width: '80%', 
-    
+    width: '80%',
   },
 
   loader: {

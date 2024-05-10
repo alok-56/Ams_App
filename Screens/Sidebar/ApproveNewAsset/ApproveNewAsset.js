@@ -7,31 +7,14 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Sidebar from '../Sidebar';
 import {useFocusEffect} from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BaseUrl } from '../../../Api/BaseUrl';
+
 
 const ApproveNewAsset = ({navigation}) => {
   const [apiData, setApiData] = useState([]);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [uDetails, setUDetail] = useState({id: '', type: ''});
-
-  const getData = async () => {
-    try {
-      const Idempuser = await AsyncStorage.getItem('userId');
-      if (Idempuser) {
-        setUDetail({...uDetails, id: JSON.parse(Idempuser)});
-      }
-      const detail = await AsyncStorage.getItem('userAccess');
-
-      const formatedData = await JSON.parse(detail);
-
-      if (formatedData) {
-        setUDetail({...uDetails, type: formatedData?.data[0]?.type_user});
-      }
-    } catch (error) {
-      console.error('Error retrieving data:', error);
-      return null;
-    }
-  };
 
   useEffect(() => {
     navigation.setOptions({
@@ -64,14 +47,12 @@ const ApproveNewAsset = ({navigation}) => {
   ];
 
   const MyTable = ({data, headings}) => {
-    console.log(data, 'llllllllooooo');
     const cellWidths = [50, 95, 110, 80, 150, 200, 80, 50];
     const startIdx = (currentPage - 1) * itemsPerPage;
     const endIdx = startIdx + itemsPerPage;
 
-    const handleAddToStorePress = (id_inv_m, id_inv) => {
-      console.log(id_inv_m, id_inv, '6,7');
-      navigation.navigate('ApproveForm', {id_inv_m, id_inv});
+    const handleAddToStorePress = (id_inv_m) => {
+      navigation.navigate('ApproveForm', {id_inv_m});
     };
 
     return (
@@ -109,16 +90,15 @@ const ApproveNewAsset = ({navigation}) => {
               data &&
               data.slice(startIdx, endIdx).map((rowData, rowIndex) => (
                 <>
-                  {console.log(rowData[6], rowData[7], '6,7777777777')}
                   <Row
                     key={rowIndex}
                     data={[
                       rowIndex + 1,
-                      ...rowData.slice(0, 6), // Columns before "Add to Store"
+                      ...rowData.slice(0, 6),
                       <TouchableOpacity
                         onPress={() =>
-                          handleAddToStorePress(rowData[6], rowData[7])
-                        } // Pass both id_inv_m and id_inv
+                          handleAddToStorePress(rowData[6])
+                        }
                         key={`plusIcon_${rowIndex}`}
                         style={{alignItems: 'center'}}>
                         <Icon name="add" size={30} color="#ff8a3d" />
@@ -145,26 +125,18 @@ const ApproveNewAsset = ({navigation}) => {
   };
   useFocusEffect(
     React.useCallback(() => {
-      // Your effect code here
-      fetchData(); // Clean up function (if needed)
+      fetchData();
     }, []),
   );
   const fetchData = async () => {
     try {
       const detail = await AsyncStorage.getItem('userAccess');
 
-      const Idempuser = await AsyncStorage.getItem('userId');
-      const formatedId = await JSON.parse(Idempuser);
-      const formatedUserType = await JSON.parse(detail);
-
       const Username = 'SVVG';
       const Password = 'Pass@123';
-      const idEmpUser = formatedId;
-      const userType = formatedUserType?.data[0]?.type_user;
       const credentials = encode(`${Username}:${Password}`);
-      console.log(idEmpUser, userType, 'jjjjjj');
       const response = await fetch(
-        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Approver/dropdownlist?id_emp_user=${idEmpUser}&userType=${userType}&searchWord`,
+        `${BaseUrl}/asset/allinvoices`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -173,19 +145,17 @@ const ApproveNewAsset = ({navigation}) => {
       );
 
       const responseData = await response.json();
-      console.log(responseData, 'llolllll');
-      if (Array.isArray(responseData.data) && responseData.data.length > 0) {
-        const mappedData = responseData.data.map(item => [
-          item.InvoiceNo,
-          item.InvoiceDate,
+      if (Array.isArray(responseData) && responseData.length > 0) {
+        const mappedData = responseData.map(item => [
+          item.idinvm.noinv,
+          item.idinvm.dtinv,
           item.RequestBy,
-          item['AssetName/Item'],
-          item.Vendor,
-          item.TotalQty,
-          item.id_inv_m,
-          item.id_inv,
-          // item.id_inv_m,
+          item.idmodel.typasst,
+          item.idinvm.idven.nmven,
+          item.qty,
+          item.idinv,
         ]);
+
         setApiData(mappedData);
       } else {
         setApiData([]);

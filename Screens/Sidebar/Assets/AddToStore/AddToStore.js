@@ -383,7 +383,7 @@ const AddToStore = ({navigation}) => {
 
       const credentials = encode(`${Username}:${Password}`);
       const response = await fetch(
-        `${BaseUrl}/master/MasterGetAll?mastername=Location&requireString=SelectAll`,
+        `${BaseUrl}/master/MasterGetAll?mastername=Floor&requireString=SelectAll`,
         {
           headers: {
             Authorization: `Basic ${credentials}`,
@@ -402,15 +402,9 @@ const AddToStore = ({navigation}) => {
     }
   };
   const handleLocationSelection = (itemValue, itemIndex) => {
+    console.log(itemValue);
     setLocation(itemValue);
-    // setSelectedLocationId(locations[itemIndex]?.id_flr || '');
-    // const selectedLocationDetails = locations.filter(
-    //   item => item.id_flr === itemValue,
-    // );
-    // setSelectedLocationDetails(selectedLocationDetails);
-    // setLocationId(selectedLocationDetails[0]?.id_loc);
-    // setSubLocationId(selectedLocationDetails[0]?.id_sloc);
-    // setBuildingId(selectedLocationDetails[0]?.id_building);
+    setSelectedLocationId(itemValue);
   };
   const fetchModels = async () => {
     try {
@@ -448,6 +442,7 @@ const AddToStore = ({navigation}) => {
 
   const getModalDetails = e => {
     const selectedModel = models.find(item => item?.idmodel === e);
+    console.log(selectedModel.idsgrp.idgrp.idgrp);
     if (selectedModel) {
       const {
         nm_model,
@@ -460,8 +455,8 @@ const AddToStore = ({navigation}) => {
 
       setModalNm(selectedModel?.nmmodel);
       setSelectedModelId(selectedModel?.idmodel);
-      setIdSAssetdiv(id_s_assetdiv);
-      setIdAssetdiv(id_assetdiv);
+      setIdSAssetdiv(selectedModel?.idsgrp?.idsgrp);
+      setIdAssetdiv(selectedModel?.idsgrp?.idgrp?.idgrp);
       setTypAsst(selectedModel?.typasst);
       setDsAsset(ds_asst);
       setItemDescription(selectedModel?.itemdesc);
@@ -762,9 +757,15 @@ const AddToStore = ({navigation}) => {
               <Picker.Item label="Select an option" value="" />
               {locations.map(loc => (
                 <Picker.Item
-                  key={loc.idloc}
-                  label={loc.nmLoc}
-                  value={loc.idloc}
+                  key={loc.idflr}
+                  label={
+                    loc.nmflr +
+                    ' , ' +
+                    loc.idbuilding.nmbuilding +
+                    ' , ' +
+                    loc.idbuilding.idloc.nmLoc
+                  }
+                  value={loc.idflr}
                 />
               ))}
             </Picker>

@@ -6,6 +6,7 @@ import {ScrollView} from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Sidebar from '../Sidebar';
 import {useFocusEffect} from '@react-navigation/native';
+import {BaseUrl} from '../../../Api/BaseUrl';
 const ModifyAsset = ({navigation}) => {
   const [apiData, setApiData] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,8 +47,8 @@ const ModifyAsset = ({navigation}) => {
     const startIdx = (currentPage - 1) * itemsPerPage;
     const endIdx = startIdx + itemsPerPage;
 
-    const handleAddToStorePress = (id_inv_m, id_inv) => {
-      navigation.navigate('ModifyAssetForm', {id_inv_m, id_inv});
+    const handleAddToStorePress = id_inv_m => {
+      navigation.navigate('ModifyAssetForm', {id_inv_m});
     };
 
     return (
@@ -105,32 +106,25 @@ const ModifyAsset = ({navigation}) => {
     try {
       const Username = 'SVVG';
       const Password = 'Pass@123';
-      const idEmpUser = 1;
-      const userType = 'Super';
       const credentials = encode(`${Username}:${Password}`);
-      const response = await fetch(
-        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Store_Rejectlist/dropdownlist?id_emp_user=${idEmpUser}&userType=${userType}&searchWord`,
-        {
-          headers: {
-            Authorization: `Basic ${credentials}`,
-          },
+      const response = await fetch(`${BaseUrl}/asset/rejectinvoices`, {
+        headers: {
+          Authorization: `Basic ${credentials}`,
         },
-      );
+      });
 
       const responseData = await response.json();
-
-      if (Array.isArray(responseData.data) && responseData.data.length > 0) {
-        const mappedData = responseData.data.map(item => [
-          item.InvoiceNo,
-          item.InvoiceDate,
+      if (Array.isArray(responseData) && responseData.length > 0) {
+        const mappedData = responseData.map(item => [
+          item.idinvm.noinv,
+          item.idinvm.dtinv,
           item.RequestBy,
-          item['AssetName/Item'],
-          item.Vendor,
-          item.TotalQty,
-          item.id_inv_m,
-          item.id_inv,
-          // item.id_inv_m,
+          item.idmodel.typasst,
+          item.idinvm.idven.nmven,
+          item.qty,
+          item.idinv,
         ]);
+
         setApiData(mappedData);
       } else {
         setApiData([]);

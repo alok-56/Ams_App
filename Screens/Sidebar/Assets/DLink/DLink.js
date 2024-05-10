@@ -16,67 +16,28 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import {ScrollView} from 'react-native-gesture-handler';
 import {encode as base64Encode} from 'base-64';
 import {useFocusEffect} from '@react-navigation/native';
+import {BaseUrl} from '../../../../Api/BaseUrl';
 
 const DLink = ({navigation}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loginType, setLoginType] = useState('');
   const [dateTo, setToDate] = useState('');
   const [showDropdownAndInput, setShowDropdownAndInput] = useState(false);
-  const [searchText, setSearchText] = useState('');
   const [showToDatepicker, setShowToDatepicker] = useState(false);
-  const [checkBoxChecked, setCheckBoxChecked] = useState(false);
-  const [textValue, setTextValue] = useState('');
   const [assetDropdownData, setAssetDropdownData] = useState([]);
-  const [selectedDropdownItem, setSelectedDropdownItem] = useState(null);
-  const [selectedCheckboxes, setSelectedCheckboxes] = useState({});
-  const [filteredAssetData, setFilteredAssetData] = useState([]);
-  const [cardStates, setCardStates] = useState([]);
-  const [overAllDatam, overAllData] = useState([]);
-  const [selectedDataAsset, setSelectedDataAsset] = useState([]);
-  const [checkedBoxes, setCheckedBoxes] = useState([]);
-  const [showToDatepickerForIndex, setShowToDatepickerForIndex] =
-    useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState('');
+  const [remark, setRemark] = useState('');
 
   const handleDateInCheck = (event, selectedDate, asset) => {
     setShowToDatepicker(false);
-    console.log(event, selectedDate, asset, 'ggg');
-
     if (selectedDate) {
       const year = selectedDate.getFullYear();
       const month = `${selectedDate.getMonth() + 1}`.padStart(2, '0');
       const day = `${selectedDate.getDate()}`.padStart(2, '0');
-      const formattedDate = `${year}-${month}-${day}`;
-
+      const formattedDate = `${year}/${month}/${day}`;
       setToDate(formattedDate);
-
-      const filteredModified = filteredAssetData.map(i => {
-        if (i.accessory_id_wh === asset.accessory_id_wh) {
-          return {
-            ...i,
-            date: formattedDate,
-          };
-        } else {
-          return i;
-        }
-      });
-
-      setFilteredAssetData(filteredModified);
     }
-  };
-  const handleAssetRemark = (itemValue, asset) => {
-    const filteredModified = filteredAssetData.map(i => {
-      if (i.accessory_id_wh === asset.accessory_id_wh) {
-        return {
-          ...i,
-          textValue: itemValue,
-        };
-      } else {
-        return i;
-      }
-    });
-
-    setFilteredAssetData(filteredModified);
   };
   useEffect(() => {
     navigation.setOptions({
@@ -106,6 +67,7 @@ const DLink = ({navigation}) => {
       ),
     });
   });
+
   const handleBackPress = () => {
     if (showDropdownAndInput) {
       setShowDropdownAndInput(false);
@@ -113,22 +75,18 @@ const DLink = ({navigation}) => {
       navigation.navigate('Dashboard');
     }
   };
+
   const handleLink = () => {
     setShowDropdownAndInput(true);
   };
 
   const fetchAssetDropdownData = async () => {
-    const Username = 'SVVG';
-    const Password = 'Pass@123';
-    const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
     try {
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/De_linkAPI/asset_dropdown?usertype&searchword',
+        `${BaseUrl}/asset/GetAssetByStatus?devicestatus=linktoasset`,
         {
           method: 'GET',
           headers: {
-            Authorization: basicAuth,
             'Content-Type': 'application/json',
           },
         },
@@ -137,11 +95,9 @@ const DLink = ({navigation}) => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
       const data = await response.json();
-
-      if (data && Array.isArray(data.data)) {
-        setAssetDropdownData(data.data);
+      if (data && Array.isArray(data)) {
+        setAssetDropdownData(data);
       }
     } catch (error) {
       console.error('Error fetching asset dropdown data:', error);
@@ -157,47 +113,23 @@ const DLink = ({navigation}) => {
     fetchAssetDropdownData();
   }, []);
 
-  useEffect(() => {
-    const initialCheckboxes = {};
-    assetDropdownData.forEach(item => {
-      initialCheckboxes[item.asset_id] = false;
-    });
-    setSelectedCheckboxes(initialCheckboxes);
-  }, [assetDropdownData]);
   const handleAssetChange = itemValue => {
     const selectedAssetData = assetDropdownData.find(
-      asset => asset.asset_id === itemValue,
+      asset => asset.idwh === itemValue,
     );
     setSelectedAsset({
-      accessory_id: selectedAssetData?.accessory_id || '',
-      serial_num: selectedAssetData?.serial_num || '',
-      nm_accessory: selectedAssetData?.nm_accessory || '',
-      Link_date: selectedAssetData?.Link_date || '',
-      asset_id: selectedAssetData?.asset_id || '',
-      asset_nm: selectedAssetData?.asset_nm || '',
-      accessory_id_wh: selectedAssetData?.accessory_id_wh || '',
-      asset_cd: selectedAssetData?.asset_cd || '',
+      accessory_id: selectedAssetData?.idwh || '',
+      serial_num: selectedAssetData?.serialno || '',
+      nm_accessory: selectedAssetData?.idinv?.idmodel?.nmmodel || '',
+      Link_date: selectedAssetData?.linkdate || '',
+      asset_id: selectedAssetData?.idwhdyn || '',
+      asset_nm: selectedAssetData?.idinv?.idmodel?.nmmodel || '',
+      accessory_id_wh: selectedAssetData?.idwh || '',
+      asset_cd: selectedAssetData?.idwhdyn || '',
     });
-    const filteredData = assetDropdownData.filter(
-      asset => asset.asset_id === itemValue,
-    );
-    const includeDatenText = filteredData.map(i => ({
-      ...i,
-      date: '',
-      textValue: '',
-      checked: false,
-    }));
-    console.log(includeDatenText, 'idc');
-    setFilteredAssetData(includeDatenText);
     setLoginType(itemValue);
-
-    // Initialize checkboxes state individually
-    const initialCheckboxes = {};
-    filteredData.forEach(asset => {
-      initialCheckboxes[asset.asset_id] = false;
-    });
-    setSelectedCheckboxes(initialCheckboxes);
   };
+
   const [selectedAsset, setSelectedAsset] = useState({
     accessory_id: '',
     serial_num: '',
@@ -210,67 +142,35 @@ const DLink = ({navigation}) => {
   });
 
   const handlePostDLinkAccessories = async () => {
+    console.log(selectedAsset);
     try {
       setIsLoading(true);
-
-      const isChecked = filteredAssetData.filter(i => i.checked);
-
-      console.log(isChecked.length, 'icsc');
-
-      if (isChecked.length === 0) {
-        Alert.alert(
-          'Validation Error',
-          'Please select at least one accessory.',
-          [{text: 'OK', onPress: () => console.log('OK Pressed')}],
-        );
-        return;
-      }
-
-      const missingValues = isChecked.filter(i => !i.date || !i.textValue);
-      const postData = isChecked.filter(i => i.date || i.textValue);
-      console.log(postData, 'pssss');
-      if (missingValues.length > 0) {
-        Alert.alert(
-          'Validation Error',
-          'Please fill in all required fields for the selected accessories.',
-          [{text: 'OK', onPress: () => console.log('OK Pressed')}],
-        );
-        return;
-      }
-      const Username = 'SVVG';
-      const Password = 'Pass@123';
-      const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
-      const apiUrl =
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/De_linkAPI/SetDlinkStatus';
-
-      const requestBody = {
-        data: postData.map(asset => ({
-          uninstallAssetDate: asset.date,
-          uninstallAssetID: asset.accessory_id_wh,
-          uninstallRmk: asset.textValue,
-        })),
-      };
-      console.log(requestBody, 'postLink');
-
+      const apiUrl = `${BaseUrl}/asset/DLinkChildMaterialUpdate?loginID=1`;
       const response = await fetch(apiUrl, {
-        method: 'POST',
+        method: 'PATCH',
         headers: {
-          Authorization: basicAuth,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify([
+          {
+            idwhaAccesory: selectedAsset?.accessory_id_wh,
+            acessoryStatus: status,
+            asstrmks: remark,
+            delinkedDate: dateTo,
+          },
+        ]),
       });
 
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       } else {
         setShowDropdownAndInput(false);
-        navigation.navigate('Dashboard');
+        fetchAssetDropdownData();
+        setRemark('');
+        setStatus('');
+        setToDate('');
       }
-
       const responseText = await response.text();
-      console.log('POST Response:', responseText);
       Alert.alert('Response', responseText, [
         {text: 'OK', onPress: () => console.log('OK Pressed')},
       ]);
@@ -280,29 +180,7 @@ const DLink = ({navigation}) => {
       setIsLoading(false); // Hide loader
     }
   };
-  const handleSearchInputChange = text => {
-    setSearchText(text);
-  };
-  const handleCheckboxChange = asset => {
-    const filteredModified = filteredAssetData.map(i => {
-      if (i.accessory_id_wh === asset.accessory_id_wh) {
-        return {
-          ...i,
-          checked: !i.checked,
-        };
-      } else {
-        return i;
-      }
-    });
 
-    setFilteredAssetData(filteredModified);
-  };
-  const findValueByLabel = label => {
-    const matchingItem = assetDropdownData.find(
-      item => item.asset_cd === label,
-    );
-    return matchingItem ? matchingItem.asset_id : null;
-  };
   return (
     <ScrollView style={styles.container}>
       {isLoading && (
@@ -313,16 +191,6 @@ const DLink = ({navigation}) => {
       <View style={styles.content}>
         {showDropdownAndInput ? (
           <View style={styles.dropdownContainer}>
-            <View style={styles.searchBarContainer}>
-              <TextInput
-                style={styles.searchBar}
-                placeholder="Search"
-                placeholderTextColor="gray"
-                value={searchText}
-                onChangeText={handleSearchInputChange}
-              />
-            </View>
-
             <Card style={styles.card}>
               <Card.Content>
                 <View style={styles.labelContainer}>
@@ -347,84 +215,86 @@ const DLink = ({navigation}) => {
             </Card>
 
             <View>
-              {filteredAssetData &&
-                filteredAssetData
-                  .filter(item => item.accessory_id.includes(searchText))
-                  .map((asset, idx) => (
-                    <Card key={idx} style={styles.card}>
-                      {console.log(asset,"Asset")}
-                      <Card.Content>
-                        <Checkbox
-                          status={asset.checked ? 'checked' : 'unchecked'}
-                          onPress={() => handleCheckboxChange(asset)}
-                        />
+              <Card style={styles.card}>
+                <Card.Content>
+                  <View style={styles.labelContainer}>
+                    <Text style={{...styles.label, color: '#ff8a3d'}}>
+                      Accessories Id :
+                    </Text>
+                    <Text style={styles.cardvalue}>
+                      {selectedAsset.accessory_id}
+                    </Text>
+                  </View>
+                  <View style={styles.labelContainer}>
+                    <Text style={{...styles.label, color: '#ff8a3d'}}>
+                      Accessories Name :
+                    </Text>
+                    <Text style={styles.cardvalue}>
+                      {selectedAsset.nm_accessory}
+                    </Text>
+                  </View>
+                  <View style={styles.labelContainer}>
+                    <Text style={{...styles.label, color: '#ff8a3d'}}>
+                      Serial No:
+                    </Text>
+                    <Text style={styles.cardvalue}>
+                      {selectedAsset.serial_num}
+                    </Text>
+                  </View>
+                  <View style={styles.labelContainer}>
+                    <Text style={{...styles.label, color: '#ff8a3d'}}>
+                      Linked Date :
+                    </Text>
+                    <Text style={styles.value}>{selectedAsset.Link_date}</Text>
+                  </View>
 
-                        <View style={styles.labelContainer}>
-                          <Text style={{...styles.label, color: '#ff8a3d'}}>
-                            Accessories Id :
-                          </Text>
-                          <Text style={styles.cardvalue}>
-                            {asset.accessory_id}
-                          </Text>
-                        </View>
-                        <View style={styles.labelContainer}>
-                          <Text style={{...styles.label, color: '#ff8a3d'}}>
-                            Accessories Name :
-                          </Text>
-                          <Text style={styles.cardvalue}>
-                            {asset.nm_accessory}
-                          </Text>
-                        </View>
-                        <View style={styles.labelContainer}>
-                          <Text style={{...styles.label, color: '#ff8a3d'}}>
-                            Serial No:
-                          </Text>
-                          <Text style={styles.cardvalue}>
-                            {asset.serial_num}
-                          </Text>
-                        </View>
-                        <View style={styles.labelContainer}>
-                          <Text style={{...styles.label, color: '#ff8a3d'}}>
-                            Linked Date :
-                          </Text>
-                          <Text style={styles.value}>{asset.Link_date}</Text>
-                        </View>
-                       
-                        <TextInput
-                          style={styles.dateInput}
-                          placeholder="Dlink Date"
-                          placeholderTextColor="gray"
-                          value={asset.date}
-                          editable={asset.checked ? true : false}
-                          onFocus={() => (
-                            setShowToDatepickerForIndex(idx),
-                            setShowToDatepicker(true)
-                          )}
-                        />
-                        {showToDatepickerForIndex === idx &&
-                          showToDatepicker && ( // Only show date picker for the selected index
-                            <DateTimePicker
-                              value={new Date()}
-                              mode="date"
-                              display="default"
-                              onChange={(e, selectedDate) =>
-                                handleDateInCheck(e, selectedDate, asset)
-                              }
-                            />
-                          )}
-                        <TextInput
-                          style={styles.remarks}
-                          onChangeText={value =>
-                            handleAssetRemark(value, asset)
-                          }
-                          value={asset.textValue}
-                          placeholder="Enter Remarks"
-                          placeholderTextColor="gray"
-                          editable={asset.checked ? true : false}
-                        />
-                      </Card.Content>
-                    </Card>
-                  ))}
+                  <View style={{paddingTop: 10}}>
+                    <Picker
+                      selectedValue={status}
+                      onValueChange={e => setStatus(e)}
+                      style={styles.picker}
+                      placeholder="Select Asset">
+                      <Picker.Item key="" label="Select Reason" value="" />
+                      <Picker.Item
+                        label="Working"
+                        key="Working"
+                        value="working"
+                      />
+                      <Picker.Item label="Permanent" value="allct_to_emp" />
+                      <Picker.Item
+                        label="Temporary"
+                        value="allct_to_emp_temp"
+                      />
+                    </Picker>
+                  </View>
+
+                  <TextInput
+                    style={styles.dateInput}
+                    placeholder="Dlink Date"
+                    placeholderTextColor="gray"
+                    value={dateTo}
+                    onFocus={() => setShowToDatepicker(true)}
+                  />
+
+                  {showToDatepicker && (
+                    <DateTimePicker
+                      value={new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={(e, selectedDate) =>
+                        handleDateInCheck(e, selectedDate)
+                      }
+                    />
+                  )}
+                  <TextInput
+                    style={styles.remarks}
+                    onChangeText={value => setRemark(value)}
+                    value={selectedAsset.textValue}
+                    placeholder="Enter Remarks"
+                    placeholderTextColor="gray"
+                  />
+                </Card.Content>
+              </Card>
             </View>
 
             <View style={styles.button}>
@@ -450,22 +320,15 @@ const DLink = ({navigation}) => {
                 style={styles.picker}
                 placeholder="Select Asset"
                 onValueChange={handleAssetChange}>
-                {[...new Set(assetDropdownData.map(item => item.asset_cd))].map(
-                  uniqueLabel => {
-                    const matchingItem = assetDropdownData.find(
-                      item => item.asset_cd === uniqueLabel,
-                    );
-                    return (
-                      <Picker.Item
-                        key={uniqueLabel}
-                        label={
-                          matchingItem ? matchingItem.asset_cd : uniqueLabel
-                        }
-                        value={findValueByLabel(uniqueLabel)}
-                      />
-                    );
-                  },
-                )}
+                <Picker.Item key="" label="Select asset" value="" />
+                {assetDropdownData &&
+                  assetDropdownData.map(item => (
+                    <Picker.Item
+                      key={item.idwh}
+                      label={item.idwhdyn}
+                      value={item.idwh}
+                    />
+                  ))}
               </Picker>
             </View>
             <TouchableOpacity onPress={handleLink}>
@@ -531,8 +394,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: '5%',
     paddingTop: '5%',
-    
-  }, dropIt: {
+  },
+  dropIt: {
     marginBottom: 600,
   },
   dropdownContainer: {

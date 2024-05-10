@@ -10,14 +10,14 @@ const WelcomeScreen = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      <LottieView
+      {/* <LottieView
         style={StyleSheet.absoluteFillObject}
         source={require('../Lottie/sparkles-animation.json')}
         autoPlay
         loop
-      />
+      /> */}
 
-      <LottieView
+      {/* <LottieView
         style={{
           height: '20%',
           width: '75%',
@@ -29,14 +29,12 @@ const WelcomeScreen = ({navigation}) => {
         source={require('../Lottie/welcome.json')}
         autoPlay
         loop
-      />
+      /> */}
 
-      <Image source={require('../assets/login.jpeg')} style={styles.logo} />
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
 
       <TouchableOpacity style={styles.button} onPress={handleStart}>
-        <Text style={styles.buttonText}>
-        Let's Get Started ➡
-        </Text>
+        <Text style={styles.buttonText}>Let's Get Started ➡</Text>
       </TouchableOpacity>
     </View>
   );
@@ -51,7 +49,7 @@ const styles = StyleSheet.create({
   },
   logo: {
     height: '25%',
-    width: '75%',
+    width: '90%',
     position: 'relative',
     display: 'flex',
     justifyContent: 'center',
@@ -64,7 +62,7 @@ const styles = StyleSheet.create({
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '80%',
+    width: '70%',
     borderRadius: 15,
     position: 'relative',
   },

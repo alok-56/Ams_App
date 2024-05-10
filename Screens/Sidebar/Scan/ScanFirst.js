@@ -110,7 +110,6 @@ const ScanFirst = ({navigation}) => {
 
   return (
     <ScrollView>
-      {console.log(tableData, '----->tdddd')}
       <Text style={{textAlign: 'center', fontWeight: 'bold', color: 'black'}}>
         Asset id
       </Text>

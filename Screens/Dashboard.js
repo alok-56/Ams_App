@@ -6,6 +6,7 @@ import Sidebar from './Sidebar/Sidebar';
 import FIcon from 'react-native-vector-icons/FontAwesome6';
 import ReportIcon from 'react-native-vector-icons/Octicons';
 import {encode} from 'base-64';
+import {BaseUrl} from '../Api/BaseUrl';
 
 const Dashboard = ({navigation, config}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -49,27 +50,13 @@ const Dashboard = ({navigation, config}) => {
       routes: [{name: 'Login'}],
     });
   };
-  const handleEmployee = () => {
-    navigation.navigate('Employee');
-  };
-  const handleInstore = () => {
-    navigation.navigate('Instore');
-  };
-  const handleDamagedAssets = () => {
-    navigation.navigate('DamagedAssets');
-  };
   const fetchInStoreCount = async () => {
     try {
-      const Username = 'SVVG'; // Replace with your actual username
-      const Password = 'Pass@123'; // Replace with your actual password
-      const basicAuth = 'Basic ' + encode(`${Username}:${Password}`);
-
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Count_Asset/Instore',
+        `${BaseUrl}/asset/GetAssetByStatus?devicestatus=instore`,
         {
           method: 'GET',
           headers: {
-            Authorization: basicAuth,
             'Content-Type': 'application/json',
           },
         },
@@ -81,9 +68,8 @@ const Dashboard = ({navigation, config}) => {
 
       const data = await response.json();
 
-      if (data && Array.isArray(data.data)) {
-        const inStoreAsset = data.data[0]?.In_store_Asset;
-        setInStoreCount(inStoreAsset || 'N/A');
+      if (data && Array.isArray(data)) {
+        setInStoreCount(data.length || 'N/A');
       }
       console.log(inStoreCount, 'instoreeee');
     } catch (error) {
@@ -95,16 +81,11 @@ const Dashboard = ({navigation, config}) => {
 
   const fetchAllocatedAssetCount = async () => {
     try {
-      const Username = 'SVVG'; // Replace with your actual username
-      const Password = 'Pass@123'; // Replace with your actual password
-      const basicAuth = 'Basic ' + encode(`${Username}:${Password}`);
-
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/Count_Asset/Allocated_Asset',
+        `${BaseUrl}/asset/GetAssetByStatus?devicestatus=allct_to_emp`,
         {
           method: 'GET',
           headers: {
-            Authorization: basicAuth,
             'Content-Type': 'application/json',
           },
         },
@@ -113,14 +94,10 @@ const Dashboard = ({navigation, config}) => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
       const data = await response.json();
-
-      if (data && Array.isArray(data.data)) {
-        const allocatedAssetCount = data.data[0]?.Allocated_Asset;
-        setAllocatedAssetCount(allocatedAssetCount || 'N/A');
+      if (data && Array.isArray(data)) {
+        setAllocatedAssetCount(data.length || 'N/A');
       }
-      console.log(allocatedAssetCount, 'innnnnnn');
     } catch (error) {
       console.error('Error fetching in-store count:', error);
       // Handle error, e.g., show an error message
@@ -128,14 +105,13 @@ const Dashboard = ({navigation, config}) => {
     }
   };
   useEffect(() => {
-    console.log('Fetching data...');
     fetchInStoreCount();
     fetchAllocatedAssetCount();
   }, []);
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={{width: '100%'}} onPress={handleEmployee}>
+      <TouchableOpacity style={{width: '100%'}}>
         <Card style={{...styles.card, backgroundColor: 'orange'}}>
           <Card.Content>
             <Title>
@@ -155,7 +131,7 @@ const Dashboard = ({navigation, config}) => {
           </Card.Content>
         </Card>
       </TouchableOpacity>
-      <TouchableOpacity style={{width: '100%'}} onPress={handleInstore}>
+      <TouchableOpacity style={{width: '100%'}}>
         <Card style={{...styles.card, backgroundColor: 'purple'}}>
           <Card.Content>
             <Title>
@@ -173,7 +149,7 @@ const Dashboard = ({navigation, config}) => {
           </Card.Content>
         </Card>
       </TouchableOpacity>
-      <TouchableOpacity style={{width: '100%'}} onPress={handleDamagedAssets}>
+      {/* <TouchableOpacity style={{width: '100%'}} onPress={handleDamagedAssets}>
         <Card style={{...styles.card, backgroundColor: '#ff4d00'}}>
           <Card.Content>
             <Title>
@@ -192,7 +168,7 @@ const Dashboard = ({navigation, config}) => {
             </Text>
           </Card.Content>
         </Card>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
       {sidebarOpen && (
         <View style={styles.sidebar}>
           <Sidebar isOpen={sidebarOpen} onClose={handleCloseSidebar} />

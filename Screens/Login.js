@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import {encode} from 'base-64';
 import {encode as base64Encode} from 'base-64';
+import {BaseUrl} from '../Api/BaseUrl';
 
 const Login = ({navigation}) => {
   const [name, setName] = useState('');
@@ -64,79 +65,47 @@ const Login = ({navigation}) => {
     }
   };
   const handleLogin = async () => {
+    console.log('ahaj');
     try {
-      console.log('hello');
-      const basicAuthCredentials = 'SVVG:Pass@123';
-      const base64Credentials = encode(basicAuthCredentials);
-
-      const loginApiCredentials = `${name}:${password}`;
-      const base64LoginApiCredentials = encode(loginApiCredentials);
-
-      const response = await fetch(
-        `http://13.235.186.102/SVVG-API/webapi/Login/UsersLogin?username=${name}&password=${password}`,
-        {
-          method: 'POST',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            Authorization: `Basic ${base64Credentials}`,
-          },
-          body: JSON.stringify({
-            username: name,
-            password: password,
-          }),
+      const response = await fetch(`${BaseUrl}/auth/Login`, {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
         },
-      );
+        body: JSON.stringify({
+          userName: name,
+          passwordString: password,
+        }),
+      });
 
-      const responseText = await response.text();
-      console.log('Response Text:', responseText);
+      const responseText = await response.json();
 
-      const responseMatch = responseText.match(/\{.*\}/);
+      if (responseText.message === 'Authentication successful') {
+        await AsyncStorage.setItem(
+          'userAccess',
+          JSON.stringify(responseText.user),
+        );
 
-      if (responseMatch) {
-        const jsonResponse = JSON.parse(responseMatch[0]);
-
-        console.log('Response JSON:', jsonResponse);
-        await AsyncStorage.setItem('userAccess', JSON.stringify(jsonResponse));
-        if (jsonResponse.data && jsonResponse.data.length > 0) {
-          const user = jsonResponse.data[0];
-
-          const userType = user.type_user;
-          const userIdType = user.id_usertype;
-          const userId = user.id_emp_user;
-          fetchEmployeeDropdownData(userId);
-          storeData(userId);
-          console.log('User Type:', userType);
-          console.log('User ID Type:', userIdType);
-          console.log('User ID:', userId);
-
-          Alert.alert('Login', 'Login successful');
-
-          navigation.navigate('Dashboard', {userId});
-          return;
-        } else {
-          Alert.alert('Login Failed', 'Invalid username or password');
-        }
+        navigation.navigate('Dashboard');
       } else {
         console.log('Could not find JSON in the response.');
       }
-
       if (!response.ok) {
-        console.error('Failed to log in:', response.status);
+        console.error('Failed to log in:', response. status);
         Alert.alert(
           'Login Failed',
           `Failed to log in. Status: ${response.status}`,
         );
       }
     } catch (error) {
-      console.error('Error during login:', error);
-      Alert.alert('Error', 'An error occurred during login.');
+      Alert.alert('Error', 'Failed To Login.');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Image source={require('../assets/login.jpeg')} style={styles.logo} />
+      <Image source={require('../assets/logo.png')} style={styles.logo} />
       <View style={styles.inputContainer}>
         <View style={styles.iconContainer}>
           <Icon name="user" size={24} color="gray" style={styles.icon} />

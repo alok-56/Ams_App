@@ -15,6 +15,7 @@ import {Picker} from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {ScrollView} from 'react-native-gesture-handler';
 import {encode as base64Encode} from 'base-64';
+import {BaseUrl} from '../../../../Api/BaseUrl';
 
 const Link = ({navigation}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,6 +36,10 @@ const Link = ({navigation}) => {
   const [additionalData, setAdditionalData] = useState([]);
   const [selectedCheckboxes, setSelectedCheckboxes] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [material, setMatetial] = useState([]);
+  const [assest, setAssest] = useState([]);
+  const [selectedAssestIds, setSelectedAssestIds] = useState('');
+  const [selectedLink, setSelectedLink] = useState('');
 
   const handleToDateChange = (event, selectedDate) => {
     setShowToDatepicker(false);
@@ -46,23 +51,7 @@ const Link = ({navigation}) => {
       setToDate(formattedDate);
     }
   };
-  const handleCheckboxSelect = itemId => {
-    console.log('Checkbox selected:', itemId); // Add this line
-    setSelectedCheckboxes(prevSelected => {
-      // Toggle the checkbox selection
-      const updatedSelected = {
-        ...prevSelected,
-        [itemId]: !prevSelected[item.id_wh],
-      };
 
-      // Log selected id_wh value to the console when checkbox is selected
-      if (updatedSelected[itemId]) {
-        console.log('Selected id_wh value:', itemId);
-      }
-
-      return updatedSelected;
-    });
-  };
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -98,26 +87,41 @@ const Link = ({navigation}) => {
       navigation.navigate('Dashboard');
     }
   };
-  const handleLink = () => {
-    setShowDropdownAndInput(true);
-  };
-  // const handleLinkAccessories = () => {
-  //   navigation.navigate('DLink')
-  // }
+
   const [assetDropdownData, setAssetDropdownData] = useState([]);
+
   const fetchAssetDropdownData = async () => {
-    const Username = 'SVVG'; // Replace with your actual username
-    const Password = 'Pass@123'; // Replace with your actual password
-
+    const Username = 'SVVG';
+    const Password = 'Pass@123';
     const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
+    try {
+      const response = await fetch(`${BaseUrl}/asset/LinkAccessories`, {
+        method: 'GET',
+        headers: {
+          Authorization: basicAuth,
+          'Content-Type': 'application/json',
+        },
+      });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data && Array.isArray(data) && data.length > 0) {
+        setAssetDropdownData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching asset dropdown data:', error);
+    }
+  };
+
+  const GetAllMetials = async () => {
     try {
       const response = await fetch(
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/LinkAccessoriesAPI/asset_dropdownlist',
+        `${BaseUrl}/master/MasterGetAll?mastername=Material&requireString=s`,
         {
           method: 'GET',
           headers: {
-            Authorization: basicAuth,
             'Content-Type': 'application/json',
           },
         },
@@ -126,14 +130,9 @@ const Link = ({navigation}) => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
       const data = await response.json();
-
-      if (data && Array.isArray(data.data) && data.data.length > 0) {
-        // Set the first asset ID initially
-        setSelectedAssetId(data.data[0].id_wh);
-        setAssetIdFromDropdown(data.data[0].id_wh);
-        setAssetDropdownData(data.data);
+      if (data && Array.isArray(data) && data.length > 0) {
+        setMatetial(data);
       }
     } catch (error) {
       console.error('Error fetching asset dropdown data:', error);
@@ -142,138 +141,46 @@ const Link = ({navigation}) => {
 
   useEffect(() => {
     fetchAssetDropdownData();
+    GetAllMetials();
   }, []);
+
   const handleLinkAccessories = async () => {
-    // Check if an asset is selected
     if (!selectedAssetId) {
       Alert.alert('Please select an asset');
       return;
     }
+    let assestDetails = assetDropdownData.find(
+      item => item.idwh === Number(selectedAssetId),
+    );
+    setAssetIdValue(assestDetails.idwhdyn);
+    setAssetValue(assestDetails.idinv.idmodel.nmmodel);
+    setShowDropdownAndInput(true);
+  };
 
-    // Define Basic Authentication headers
-    const Username = 'SVVG'; // Replace with your actual username
-    const Password = 'Pass@123'; // Replace with your actual password
-    const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
-    // Construct the API URL with the selectedAssetId
-    const apiUrl = `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/LinkAccessoriesAPI/Display_additional?searchword=${selectedAssetId}`;
-
+  const handleLinkChange = async id => {
+    setSelectedLink(id);
     try {
-      // Perform the API call with Basic Authentication headers
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          Authorization: basicAuth,
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${BaseUrl}/asset/GetAssetBYItemName?loginID=1&MaterialID=${id}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-      });
-
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
       const data = await response.json();
-      console.log('Second API Response:', data);
-
-      // Check if the response contains data
-      if (data && Array.isArray(data.data) && data.data.length > 0) {
-        // Extract information from the first item in the response
-        const assetInfo = data.data[0];
-
-        // Update the state variables with the extracted information
-        setAssetIdValue(assetInfo.AssetID);
-        setAssetValue(assetInfo.Asset_Subcategry);
-        setShowDropdownAndInput(true);
-      } else {
-        // Handle the case where the response is empty
-        alert('No data found for the selected asset');
+      console.log(data);
+      if (data && Array.isArray(data) && data.length > 0) {
+        setAssest(data);
       }
     } catch (error) {
-      console.error('Error fetching additional data:', error);
+      console.error('Error fetching asset dropdown data:', error);
     }
   };
-  const fetchLinkAssetList = async () => {
-    // Define Basic Authentication headers
-    const Username = 'SVVG'; // Replace with your actual username
-    const Password = 'Pass@123'; // Replace with your actual password
-    const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
-    // Construct the API URL with the selectedAssetId
-    const apiUrl =
-      'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/LinkAccessoriesAPI/linkAssetlist?usertype&searchword';
-
-    try {
-      // Perform the API call with Basic Authentication headers
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          Authorization: basicAuth,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Check if the response contains data
-      if (data && Array.isArray(data.data) && data.data.length > 0) {
-        // Update the state variables with the fetched data
-        setAccessoryIdFromLinkAssetList(data.data[0].id_wh);
-        setLinkAssetList(data.data);
-        setShowDropdownAndInput(true);
-      } else {
-        // Handle the case where the response is empty
-        alert('No data found for the selected asset');
-      }
-    } catch (error) {
-      console.error('Error fetching additional data:', error);
-    }
-  };
-
-  // Call this function when you want to fetch data from the specified URL
-  const handleLinkAssetList = () => {
-    fetchLinkAssetList();
-  };
-  const handleAdditionalData = async () => {
-    try {
-      // Define Basic Authentication headers
-      const Username = 'SVVG'; // Replace with your actual username
-      const Password = 'Pass@123'; // Replace with your actual password
-      const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
-      // Construct the API URL
-      const apiUrl =
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/LinkAccessoriesAPI/linkAssetlist?usertype&searchword'; // Replace with your actual URL
-
-      // Perform the API call with Basic Authentication headers
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          Authorization: basicAuth,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      // Handle the fetched data as needed
-      console.log('Additional Data:', data);
-      setAdditionalData(data.data);
-      // You can update state variables or perform other actions with the data here
-    } catch (error) {
-      console.error('Error fetching additional data:', error);
-    }
-  };
-  useEffect(() => {
-    handleAdditionalData();
-  }, []);
 
   const handlePostLinkAccessories = async () => {
     try {
@@ -284,73 +191,47 @@ const Link = ({navigation}) => {
         ]);
         return;
       }
-      const isCheckboxSelected = Object.values(selectedCheckboxes).some(
-        value => value,
-      );
-      if (!isCheckboxSelected) {
-        Alert.alert(
-          'Validation Error',
-          'Please select at least one accessory.',
-          [{text: 'OK', onPress: () => console.log('OK Pressed')}],
-        );
-        return;
+      let allassest = await fetch(`${BaseUrl}/asset/allassets`);
+      allassest = await allassest.json();
+      let id = allassest.filter(res => res.idwhdyn === selectedAssestIds);
+      if (id) {
+        const apiUrl = `${BaseUrl}/asset/LinkChildMaterialUpdate?parentIdwh=${id[0].idwh}&loginID=1`;
+        const response = await fetch(apiUrl, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify([
+            {
+              idwhList: selectedAssetId,
+              linkedDate: dateTo,
+            },
+          ]),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        } else {
+          setShowDropdownAndInput(false);
+          setToDate('');
+          setSelectedLink('');
+          setSelectedAssestIds('');
+          fetchAssetDropdownData();
+        }
+
+        const responseText = await response.text();
+
+        Alert.alert('Success', responseText, [
+          {text: 'OK', onPress: () => console.log('OK Pressed')},
+        ]);
       }
-      // Define Basic Authentication headers
-      const Username = 'SVVG'; // Replace with your actual username
-      const Password = 'Pass@123'; // Replace with your actual password
-      const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
-      // Construct the API URL
-      const apiUrl =
-        'https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/LinkAccessoriesAPI/SetlinkStatus';
-
-      // Define the body for the POST request
-      const selectedAccessories = Object.keys(selectedCheckboxes)
-        .filter(id_wh => selectedCheckboxes[id_wh])
-        .map(id_wh => ({
-          to_assign: selectedAssetId,
-          dt_allocate: dateTo,
-          installRmk: 'remark',
-          InstallAssetID: id_wh,
-        }));
-
-      // Define the body for the POST request
-      const requestBody = {
-        data: selectedAccessories,
-      };
-      console.log(requestBody, 'postLink');
-      console.log(accessoryIdFromLinkAssetList, 'accccccc');
-
-      // Perform the POST request with Basic Authentication headers and the body
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: basicAuth,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      } else {
-        setShowDropdownAndInput(false);
-      }
-
-      const responseText = await response.text();
-      console.log('POST Response:', responseText);
-      Alert.alert('Success', responseText, [
-        {text: 'OK', onPress: () => console.log('OK Pressed')},
-      ]);
     } catch (error) {
       console.error('Error posting data:', error);
     } finally {
       setIsLoading(false);
     }
   };
-  const handleSearchInputChange = text => {
-    setSearchText(text);
-  };
+
 
   return (
     <ScrollView style={styles.container}>
@@ -362,34 +243,6 @@ const Link = ({navigation}) => {
       <View style={styles.content}>
         {showDropdownAndInput ? (
           <View style={styles.dropdownContainer}>
-            <View style={styles.searchBarContainer}>
-              <TextInput
-                style={styles.searchBar}
-                placeholder="Search"
-                placeholderTextColor="gray"
-                value={searchText}
-                onChangeText={handleSearchInputChange}
-              />
-            </View>
-            <View style={styles.dateContainer}>
-              <Text style={{color: 'black'}}>Link Date</Text>
-              <TextInput
-                style={styles.dateInput}
-                placeholder="Link Date"
-                placeholderTextColor="gray"
-                value={dateTo} // Make sure it's bound to the state
-                onFocus={() => setShowToDatepicker(true)}
-              />
-              {showToDatepicker && (
-                <DateTimePicker
-                  value={new Date()}
-                  mode="date"
-                  display="default"
-                  onChange={handleToDateChange}
-                />
-              )}
-            </View>
-
             <Card style={styles.card}>
               <Card.Content>
                 <View style={styles.labelContainer}>
@@ -406,39 +259,61 @@ const Link = ({navigation}) => {
                 </View>
               </Card.Content>
             </Card>
+            <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000'}}>
+              Link To
+            </Text>
+            <View style={{paddingTop: 10}}>
+              <Picker
+                selectedValue={selectedLink}
+                onValueChange={itemValue => handleLinkChange(itemValue)}
+                style={styles.picker}
+                placeholder="Select Asset">
+                <Picker.Item key="" label="Select Material" value="" />
+                {material &&
+                  material.map(item => (
+                    <Picker.Item
+                      key={item.idmodel}
+                      label={item.nmmodel}
+                      value={item.idmodel}
+                    />
+                  ))}
+              </Picker>
+            </View>
+            <Text style={{fontSize: 16, fontWeight: 'bold', color: '#000'}}>
+              Asset Id
+            </Text>
+            <View style={{paddingTop: 10}}>
+              <Picker
+                selectedValue={selectedAssestIds}
+                onValueChange={itemValue => setSelectedAssestIds(itemValue)}
+                style={styles.picker}
+                placeholder="Select Asset">
+                <Picker.Item key="" label="Select assest Id" value="" />
+                {assest &&
+                  assest.map(item => (
+                    <Picker.Item key={item} label={item} value={item} />
+                  ))}
+              </Picker>
+            </View>
 
-            {additionalData
-              .filter(item => item.asset_id.includes(searchText))
-              .map(item => (
-                <View key={item.id_wh}>
-                  <Card style={{...styles.card, backgroundColor: '#052d6e'}}>
-                    <Card.Content>
-                      <View style={styles.labelContainer}>
-                        <Text style={styles.additionlabel}>
-                          {item.asset_id}
-                        </Text>
-                        <Checkbox
-                          status={
-                            selectedCheckboxes[item.id_wh]
-                              ? 'checked'
-                              : 'unchecked'
-                          }
-                          onPress={() => {
-                            console.log('Checkbox pressed', item.id_wh);
-                            const updatedCheckboxes = {...selectedCheckboxes};
-                            updatedCheckboxes[item.id_wh] =
-                              !updatedCheckboxes[item.id_wh];
-                            setSelectedCheckboxes(updatedCheckboxes);
-                          }}
-                        />
-                        <Text style={styles.additionvalue}>
-                          Sr No : {item.serial_num}
-                        </Text>
-                      </View>
-                    </Card.Content>
-                  </Card>
-                </View>
-              ))}
+            <View style={styles.dateContainer}>
+              <Text style={{color: 'black'}}>Link Date</Text>
+              <TextInput
+                style={styles.dateInput}
+                placeholder="Link Date"
+                placeholderTextColor="gray"
+                value={dateTo}
+                onFocus={() => setShowToDatepicker(true)}
+              />
+              {showToDatepicker && (
+                <DateTimePicker
+                  value={new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={handleToDateChange}
+                />
+              )}
+            </View>
 
             <TouchableOpacity onPress={handlePostLinkAccessories}>
               <View style={styles.button}>
@@ -447,40 +322,39 @@ const Link = ({navigation}) => {
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={{ flex: 1, marginBottom:'100%' }}>
-          <View style={{ paddingTop: 20 }}>
-            <View
-              style={{
-                display: 'flex',
-                alignSelf: 'center',
-                padding: 10,
-                margin: 10,
-              }}>
-              <Icon name="add-shopping-cart" color="gray" size={60} />
+          <View style={{flex: 1, marginBottom: '100%'}}>
+            <View style={{paddingTop: 20}}>
+              <View
+                style={{
+                  display: 'flex',
+                  alignSelf: 'center',
+                  padding: 10,
+                  margin: 10,
+                }}>
+                <Icon name="add-shopping-cart" color="gray" size={60} />
+              </View>
+              <Picker
+                selectedValue={selectedAssetId}
+                onValueChange={itemValue => setSelectedAssetId(itemValue)}
+                style={styles.picker}
+                placeholder="Select Asset">
+                <Picker.Item key="" label="Select Assest" value="" />
+                {assetDropdownData.map(item => (
+                  <Picker.Item
+                    key={item.idwh}
+                    label={item.idwhdyn}
+                    value={item.idwh}
+                    onValueChange={e => setAssetIdFromDropdown(e)}
+                  />
+                ))}
+              </Picker>
             </View>
-            <Picker
-              selectedValue={selectedAssetId}
-              onValueChange={itemValue => setSelectedAssetId(itemValue)}
-              style={styles.picker}
-              placeholder="Select Asset">
-                {console.log(assetDropdownData,"add")}
-              {assetDropdownData.map(item => (
-                <Picker.Item
-                  key={item.id_wh}
-                  label={item.Asset_Name_serial}
-                  value={item.id_wh}
-                  onValueChange={(e)=>setAssetIdFromDropdown(e)}
-                />
-              ))}
-            </Picker>
+            <TouchableOpacity onPress={handleLinkAccessories}>
+              <View style={styles.button}>
+                <Text style={styles.buttonText}>Link</Text>
+              </View>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={handleLinkAccessories}>
-            <View style={styles.button}>
-              <Text style={styles.buttonText}>Link</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
-        
         )}
       </View>
       {sidebarOpen && (
@@ -499,11 +373,13 @@ const styles = StyleSheet.create({
   dateContainer: {
     padding: 5,
     justifyContent: 'space-between',
-    width: '60%',
+    width: '100%',
     borderWidth: 1,
     borderColor: 'gray',
     margin: 10,
     alignSelf: 'center',
+    height: 60,
+    borderRadius: 5,
   },
   dateInput: {
     color: 'black',
@@ -535,11 +411,9 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: '5%',
     paddingTop: '5%',
-  
   },
   dropdownContainer: {
     marginVertical: 10,
-  
   },
   button: {
     backgroundColor: '#ff8a3d',
@@ -581,10 +455,9 @@ const styles = StyleSheet.create({
     left: 0,
     backgroundColor: '#ccc',
     padding: '5%',
-    width: '80%', 
-    
+    width: '80%',
   },
-  
+
   remarks: {
     borderWidth: 1,
     borderColor: 'gray',

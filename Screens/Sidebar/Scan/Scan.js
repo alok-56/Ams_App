@@ -18,11 +18,11 @@ import DocumentPicker from 'react-native-document-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {encode as base64Encode} from 'base-64';
 import {Table, Row} from 'react-native-table-component';
+import {BaseUrl} from '../../../Api/BaseUrl';
 
 const Scan = ({navigation}) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [message, setMessage] = useState('');
   const [idData, setIdData] = useState([]);
   const [currentUserData, setCurrentUserData] = useState([]);
   const [locationData, setLocationData] = useState([]);
@@ -32,6 +32,7 @@ const Scan = ({navigation}) => {
   useEffect(() => {
     retrieveUserData();
   }, []);
+
   const showModal = () => {
     setModalVisible(true);
     retrieveData();
@@ -56,19 +57,12 @@ const Scan = ({navigation}) => {
     }
   };
   const getFloorDetails = async id => {
-    const Username = 'SVVG'; // Replace with your actual username
-    const Password = 'Pass@123'; // Replace with your actual password
-    const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
     try {
       const response = await fetch(
-        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/ScanFileUpload/FloorDropdown?searchword=${encodeURIComponent(
-          id,
-        )}`,
+        `${BaseUrl}/master/MasterGetAll?mastername=Floor&requireString=s`,
         {
           method: 'GET',
           headers: {
-            Authorization: basicAuth,
             'Content-Type': 'application/json',
           },
         },
@@ -80,28 +74,20 @@ const Scan = ({navigation}) => {
 
       const data = await response.json();
 
-      if (data && Array.isArray(data.data)) {
-        setFloorData(data.data);
+      if (data && Array.isArray(data)) {
+        setFloorData(data);
       }
     } catch (error) {
       console.error('Error fetching asset dropdown data:', error);
-      // Handle error, e.g., show an error message
     }
   };
   const getLocationDetails = async userId => {
-    const Username = 'SVVG'; // Replace with your actual username
-    const Password = 'Pass@123'; // Replace with your actual password
-    const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
     try {
       const response = await fetch(
-        `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/ScanFileUpload/EMPLocation?id_emp_user=${encodeURIComponent(
-          userId,
-        )}`,
+        `${BaseUrl}/master/MasterGetAll?mastername=Location&requireString=s`,
         {
           method: 'GET',
           headers: {
-            Authorization: basicAuth,
             'Content-Type': 'application/json',
           },
         },
@@ -113,12 +99,11 @@ const Scan = ({navigation}) => {
 
       const data = await response.json();
 
-      if (data && Array.isArray(data.data)) {
-        setLocationData(data.data);
+      if (data && Array.isArray(data)) {
+        setLocationData(data);
       }
     } catch (error) {
       console.error('Error fetching location dropdown data:', error);
-      // Handle error, e.g., show an error message
     }
   };
   const retrieveData = async () => {
@@ -131,7 +116,6 @@ const Scan = ({navigation}) => {
         setIdData(transformedArray.map((I, index) => [index, I]));
         const bodayDataTransfer = transformedArray.map(i => ({id_wh_dyn: i}));
         setIdBodyData(bodayDataTransfer);
-        console.log('Data retrieved successfully:', storedDataArray);
       } else {
         console.log('No data found in AsyncStorage.');
       }
@@ -144,14 +128,13 @@ const Scan = ({navigation}) => {
     setModalVisible(false);
   };
   const saveMessage = () => {
-    // Handle the saved message logic here
-    console.log('Saved message:', message);
     setModalVisible(false);
   };
   useEffect(() => {
     setModalVisible(true);
     retrieveData();
   }, [navigation]);
+
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -191,6 +174,7 @@ const Scan = ({navigation}) => {
   const [separateYear, setSeparateYear] = useState('');
   const [showYearpicker, setShowYearpicker] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
+
   const handleYearChange = (event, selectedDate) => {
     setShowYearpicker(false);
     if (selectedDate) {
@@ -198,25 +182,11 @@ const Scan = ({navigation}) => {
       setYear(year.toString());
     }
   };
-  const pickDocument = async () => {
-    try {
-      const result = await DocumentPicker.pick({
-        type: [DocumentPicker.types.allFiles],
-      });
-
-      setSelectedDocument(result);
-    } catch (err) {
-      if (DocumentPicker.isCancel(err)) {
-        // User cancelled the picker
-      } else {
-        console.error('Error picking document:', err);
-      }
-    }
-  };
 
   const scaAsset = async () => {
     navigation.navigate('QrCodeScanner');
   };
+
   const saveDetails = async () => {
     try {
       if (idBodyData.length <= 0) {
@@ -231,31 +201,14 @@ const Scan = ({navigation}) => {
           ],
         );
       }
-      // Define Basic Authentication headers
-      const Username = 'SVVG'; // Replace with your actual username
-      const Password = 'Pass@123'; // Replace with your actual password
+      const Username = 'SVVG';
+      const Password = 'Pass@123';
       const basicAuth = 'Basic ' + base64Encode(Username + ':' + Password);
-
-      // Construct the API URL
       const apiUrl = `https://ezatlas.co.in/AMS-SVVG-ANDROID/webapi/ScanFileUpload/UploadScan?id_loc=${location}&id_sloc=${subLocation}&id_flr=${floor}&id_emp_user=${currentUserData?.id_emp_user}&year=${year}&period=${separateYear}`;
 
       const requestBody = {
         data: idBodyData,
       };
-
-      {
-        console.log(
-          showYearpicker,
-          separateYear,
-          year,
-          floor,
-          building,
-          subLocation,
-          location,
-          '---llllllllll',
-        );
-      }
-
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
@@ -288,8 +241,6 @@ const Scan = ({navigation}) => {
   const clearAsyncStorage = async () => {
     try {
       await AsyncStorage.removeItem('AssestData');
-
-      console.log('Data CLeared');
     } catch (err) {
       console.log('error', err);
     }
@@ -307,12 +258,9 @@ const Scan = ({navigation}) => {
     };
     const handleFilterDataFromAsync = async removeId => {
       try {
-        console.log(removeId, 'id to be removed');
         const getAsyncValue = await AsyncStorage.getItem('AssestData');
         let format = JSON.parse(getAsyncValue);
         let removeIdValue = format.filter(i => i !== removeId[1]);
-        console.log(removeIdValue, 'rmd id value');
-
         await AsyncStorage.setItem('AssestData', JSON.stringify(removeIdValue));
       } catch (error) {
         console.log(error, 'error');
@@ -320,8 +268,6 @@ const Scan = ({navigation}) => {
     };
     return (
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {console.log(idData, 'id data')}
-        {console.log(idBodyData, 'post body')}
         <View style={{marginTop: '10%', marginBottom: '10%'}}>
           <Table borderStyle={{borderWidth: 1, borderColor: '#C1C0B9'}}>
             <Row
@@ -357,9 +303,9 @@ const Scan = ({navigation}) => {
                 <Row
                   key={rowIndex}
                   data={[
-                    ...rowData, // Columns before "Add to Store"
+                    ...rowData,
                     <TouchableOpacity
-                      onPress={() => handleAddToStorePress(rowData, rowIndex)} // Pass both id_inv_m and id_inv
+                      onPress={() => handleAddToStorePress(rowData, rowIndex)}
                       key={`plusIcon_${rowIndex}`}
                       style={{alignItems: 'center'}}>
                       <Icon name="delete" size={30} color="#ff8a3d" />
@@ -396,25 +342,6 @@ const Scan = ({navigation}) => {
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalHeader}>Scanned Assets Ids:</Text>
-              {/* <Text
-                style={{
-                  color: 'black',
-                  textAlign: 'center',
-                  fontWeight: 'bold',
-                  fontSize: 16,
-                  marginBottom: '5%',
-                }}>
-                AssetID
-              </Text> */}
-
-              {/* <TextInput
-                style={styles.textInput}
-                multiline
-                value={idData}
-                onChangeText={text => (
-                  setIdData(...idData, text), setMessage(text)
-                )}
-              /> */}
               <MyTable data={idData} headings={['S.NO', 'Asset ID']} />
 
               <TouchableHighlight
@@ -453,8 +380,8 @@ const Scan = ({navigation}) => {
                 value=""
                 style={{color: 'gray'}}
               />
-              {locationData.map(i => (
-                <Picker.Item label={i?.nmloc} value={i?.location} />
+              {locationData.map((i, index) => (
+                <Picker.Item label={i?.nmLoc} value={i?.idloc} />
               ))}
             </Picker>
           </View>
@@ -529,8 +456,13 @@ const Scan = ({navigation}) => {
               onValueChange={itemValue => setFloor(itemValue)}
               style={styles.picker}
               placeholder="Select Asset">
+              <Picker.Item
+                label="Select an option"
+                value=""
+                style={{color: 'gray'}}
+              />
               {floorData.map(i => (
-                <Picker.Item label={i?.nm_flr} value={i?.id_flr} />
+                <Picker.Item label={i?.nmflr} value={i?.idflr} />
               ))}
             </Picker>
           </View>
@@ -728,7 +660,7 @@ const styles = StyleSheet.create({
     color: 'black',
     width: '95%',
     padding: 10,
-
+    alignSelf: 'center',
     borderRadius: 5,
   },
   modalContent: {
